@@ -1,0 +1,20 @@
+# Node
+node_modules/
+dist/
+.env
+.env.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+
+# DB
+*.duckdb
+*.duckdb.wal
+
+# OS
+.DS_Store
