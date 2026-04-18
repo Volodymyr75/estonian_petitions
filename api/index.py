@@ -1,15 +1,27 @@
 import sys
 import os
+import traceback
 
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from services.analytics import get_overview_kpis, get_trending_initiatives
 from services.initiatives import get_active_initiatives, get_initiative_timeline
 
 app = FastAPI(title="Estonian Civic Analytics API")
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error_message": str(exc),
+            "traceback": traceback.format_exc()
+        }
+    )
 
 app.add_middleware(
     CORSMiddleware,
