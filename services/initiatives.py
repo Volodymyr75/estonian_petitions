@@ -9,9 +9,11 @@ except ImportError:
 DB_PATH = os.environ.get("DB_PATH", os.path.join(os.path.dirname(os.path.dirname(__file__)), 'petitions.duckdb'))
 
 def get_db_connection():
+    # Vercel serverless functions need a writable home directory (/tmp)
+    config = {'home_directory': '/tmp'}
     if DB_PATH.startswith("md:"):
-        return duckdb.connect(DB_PATH)
-    return duckdb.connect(DB_PATH, read_only=True)
+        return duckdb.connect(DB_PATH, config=config)
+    return duckdb.connect(DB_PATH, read_only=True, config=config)
 
 def get_active_initiatives():
     """Retrieve all active initiatives."""
