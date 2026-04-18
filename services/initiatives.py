@@ -1,4 +1,9 @@
 import os
+
+# Fix for Vercel/Lambda where HOME might be empty or read-only
+if os.environ.get("VERCEL") == "1" or not os.environ.get("HOME"):
+    os.environ["HOME"] = "/tmp"
+
 import duckdb
 
 try:
