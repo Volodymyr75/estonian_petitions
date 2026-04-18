@@ -4,6 +4,8 @@ import duckdb
 DB_PATH = os.environ.get("DB_PATH", os.path.join(os.path.dirname(os.path.dirname(__file__)), 'petitions.duckdb'))
 
 def get_db_connection():
+    if DB_PATH.startswith("md:"):
+        return duckdb.connect(DB_PATH)
     return duckdb.connect(DB_PATH, read_only=True)
 
 def get_overview_kpis():
