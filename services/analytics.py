@@ -42,7 +42,7 @@ def get_trending_initiatives(limit: int = 5):
     con = get_db_connection()
     try:
         query = """
-        SELECT id, title, phase, signatures_count
+        SELECT id, title, phase, signatures_count, url
         FROM initiatives
         WHERE phase = 'sign'
         ORDER BY signatures_count DESC
@@ -54,5 +54,51 @@ def get_trending_initiatives(limit: int = 5):
         except Exception:
             columns = [col[0] for col in res.description]
             return [dict(zip(columns, row)) for row in res.fetchall()]
+    finally:
+        con.close()
+
+def get_phase_distribution():
+    """Retrieve distribution of initiatives across different phases."""
+    con = get_db_connection()
+    try:
+        query = """
+        SELECT phase, count(*) as count 
+        FROM initiatives 
+        GROUP BY phase 
+        ORDER BY count DESC
+        """
+        res = con.execute(query)
+        try:
+            return res.df().to_dict(orient='records')
+        except Exception:
+            columns = [col[0] for col in res.description]
+            return [dict(zip(columns, row)) for row in res.fetchall()]
+    finally:
+        con.close()
+
+def get_recent_summary():
+    """Retrieve recent platform activity summary."""
+    con = get_db_connection()
+    try:
+        # 1. New initiatives in last 30 days
+        q1 = "SELECT count(*) FROM initiatives WHERE created_at >= current_date() - interval 30 day"
+        new_count = con.execute(q1).fetchone()[0]
+
+        # 2. Latest event
+        q2 = "SELECT event_title, actor, event_date FROM initiative_events ORDER BY event_date DESC LIMIT 1"
+        latest_event = con.execute(q2).fetchone()
+        
+        event_dict = None
+        if latest_event:
+            event_dict = {
+                "title": latest_event[0],
+                "actor": latest_event[1],
+                "date": latest_event[2].isoformat() if hasattr(latest_event[2], 'isoformat') else latest_event[2]
+            }
+
+        return {
+            "new_in_30_days": new_count,
+            "latest_event": event_dict
+        }
     finally:
         con.close()

@@ -8,7 +8,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from services.analytics import get_overview_kpis, get_trending_initiatives
+from services.analytics import get_overview_kpis, get_trending_initiatives, get_phase_distribution, get_recent_summary
 from services.initiatives import get_active_initiatives, get_initiative_timeline
 
 app = FastAPI(title="Estonian Civic Analytics API")
@@ -46,3 +46,11 @@ def get_active():
 @app.get("/api/initiatives/{initiative_id}/timeline")
 def get_timeline(initiative_id: str):
     return get_initiative_timeline(initiative_id)
+
+@app.get("/api/phases")
+def get_phases():
+    return get_phase_distribution()
+
+@app.get("/api/summary")
+def get_summary():
+    return get_recent_summary()

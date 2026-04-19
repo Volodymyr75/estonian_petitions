@@ -5,6 +5,8 @@ function App() {
   const [lang, setLang] = useState('en');
   const [kpis, setKpis] = useState(null);
   const [trending, setTrending] = useState([]);
+  const [phases, setPhases] = useState([]);
+  const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // Simple translations for MVP
@@ -19,7 +21,17 @@ function App() {
       momentum: "Trending Initiatives",
       signatures: "signatures",
       view_timeline: "View Timeline",
-      phase_sign: "Signing"
+      phase_sign: "Signing",
+      phase_parliament: "Parliament",
+      phase_processing: "Processing",
+      phase_completed: "Completed",
+      phase_archived: "Archived",
+      phase_rejected: "Rejected",
+      phase_other: "Other",
+      summary_title: "Recent Platform Activity",
+      new_initiatives: "New initiatives in the last 30 days",
+      latest_activity: "Latest platform activity",
+      on: "on"
     },
     et: {
       title: "Eesti Rahvaalgatused",
@@ -31,26 +43,43 @@ function App() {
       momentum: "Kuumad Algatused",
       signatures: "allkirja",
       view_timeline: "Vaata Ajajoont",
-      phase_sign: "Allkirjastamine"
+      phase_sign: "Allkirjastamine",
+      phase_parliament: "Parlament",
+      phase_processing: "Menetluses",
+      phase_completed: "Lõpetatud",
+      phase_archived: "Arhiveeritud",
+      phase_rejected: "Tagasi lükatud",
+      phase_other: "Muu",
+      summary_title: "Hiljutine Aktiivsus",
+      new_initiatives: "Uusi algatusi viimase 30 päeva jooksul",
+      latest_activity: "Viimane tegevus platvormil",
+      on: "kuupäeval"
     }
   };
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [kpiRes, trendRes] = await Promise.all([
+        const [kpiRes, trendRes, phaseRes, sumRes] = await Promise.all([
           fetch('/api/kpis'),
-          fetch('/api/trending?limit=5')
+          fetch('/api/trending?limit=5'),
+          fetch('/api/phases'),
+          fetch('/api/summary')
         ]);
         
         const kpiData = await kpiRes.json();
         const trendData = await trendRes.json();
+        const phaseData = await phaseRes.json();
+        const sumData = await sumRes.json();
         
         setKpis(kpiData);
         setTrending(trendData);
-        setLoading(false);
+        setPhases(phaseData);
+        setSummary(sumData);
       } catch (err) {
         console.error("Error fetching data:", err);
+      } finally {
+        setLoading(false);
       }
     }
     fetchData();
@@ -65,6 +94,17 @@ function App() {
   }
 
   const activeT = t[lang];
+
+  const phaseColors = {
+    'sign': '#10b981', // green
+    'parliament': '#3b82f6', // blue
+    'processing': '#f59e0b', // yellow 
+    'completed': '#8b5cf6', // purple
+    'archived': '#64748b', // gray
+    'rejected': '#ef4444' // red
+  };
+
+  const getPhaseName = (slug) => activeT[`phase_${slug}`] || activeT.phase_other || slug;
 
   return (
     <div className="container">
@@ -94,13 +134,51 @@ function App() {
           </div>
         </div>
 
+        {/* BLOCK 1.5: PHASE DIST & SUMMARY */}
+        <div className="dashboard-grid" style={{gridTemplateColumns: '2fr 1fr'}}>
+          <div className="glass-panel">
+            <h2 className="section-title"><BarChart3 size={20} color="#60a5fa"/> Phase Distribution</h2>
+            <div className="phase-bar-container">
+              <div className="phase-bar">
+                {phases.map(p => {
+                  const width = `${(p.count / Math.max(1, kpis?.total_initiatives || 1)) * 100}%`;
+                  const color = phaseColors[p.phase] || '#cbd5e1';
+                  return <div key={p.phase} className="phase-segment" style={{width, backgroundColor: color}} title={`${getPhaseName(p.phase)}: ${p.count}`} />
+                })}
+              </div>
+              <div className="phase-legend">
+                {phases.map(p => (
+                  <div key={p.phase} className="legend-item">
+                    <span className="legend-dot" style={{backgroundColor: phaseColors[p.phase] || '#cbd5e1'}}></span>
+                    {getPhaseName(p.phase)} ({p.count})
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          
+          <div className="glass-panel">
+            <div className="summary-box">
+              <h3 style={{marginBottom: '1rem', color:'#fff', fontSize: '1.1rem'}}>{activeT.summary_title}</h3>
+              <p><strong>{summary?.new_in_30_days || 0}</strong> {activeT.new_initiatives.toLowerCase()}</p>
+              {summary?.latest_event && (
+                <div style={{marginTop: '1rem'}}>
+                  <p style={{color: '#60a5fa', fontSize:'0.85rem', marginBottom: '0.2rem'}}>{activeT.latest_activity.toUpperCase()}</p>
+                  <p><strong>{summary.latest_event.title}</strong></p>
+                  <p style={{fontSize:'0.85rem', marginTop: '0.3rem'}}>{summary.latest_event.actor} {activeT.on} {new Date(summary.latest_event.date).toLocaleDateString()}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* BLOCK 2: MOMENTUM */}
         <div className="dashboard-grid" style={{gridTemplateColumns: '1fr'}}>
           <div className="glass-panel">
             <h2 className="section-title"><Zap size={20} color="#fbbf24"/> {activeT.momentum}</h2>
             <div>
               {trending.map(item => (
-                <div className="list-item" key={item.id}>
+                <a href={item.url} target="_blank" rel="noopener noreferrer" className="list-item" key={item.id} style={{display:'flex', textDecoration:'none', color:'inherit'}}>
                   <div className="item-info">
                     <h4>{item.title}</h4>
                     <span>{item.signatures_count.toLocaleString()} {activeT.signatures}</span>
@@ -111,7 +189,7 @@ function App() {
                       <ChevronRight size={20}/>
                     </button>
                   </div>
-                </div>
+                </a>
               ))}
             </div>
           </div>

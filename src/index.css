@@ -170,3 +170,67 @@ header p {
   0%, 100% { opacity: 1; }
   50% { opacity: .5; }
 }
+
+/* Phase Bar */
+.phase-bar-container {
+  margin-top: 1rem;
+  width: 100%;
+}
+.phase-bar {
+  display: flex;
+  height: 12px;
+  border-radius: 9999px;
+  overflow: hidden;
+  background: var(--panel-border);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+}
+.phase-segment {
+  height: 100%;
+  position: relative;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.phase-segment:hover {
+  opacity: 0.8;
+}
+.phase-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1rem;
+  font-size: 0.85rem;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text-muted);
+}
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+/* Summary Box */
+.summary-box {
+  background: rgba(59, 130, 246, 0.05);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 8px;
+  padding: 1.2rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+  height: 100%;
+}
+.summary-box strong {
+  color: #fff;
+  font-weight: 600;
+}
+
+/* Link reset */
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
