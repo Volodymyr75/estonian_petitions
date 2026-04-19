@@ -50,10 +50,16 @@ def get_trending_initiatives(limit: int = 5):
         """
         res = con.execute(query, [limit])
         try:
-            return res.df().to_dict(orient='records')
+            records = res.df().to_dict(orient='records')
         except Exception:
             columns = [col[0] for col in res.description]
-            return [dict(zip(columns, row)) for row in res.fetchall()]
+            records = [dict(zip(columns, row)) for row in res.fetchall()]
+            
+        for r in records:
+            if not r.get('url'):
+                r['url'] = f"https://rahvaalgatus.ee/initiatives/{r['id']}"
+        
+        return records
     finally:
         con.close()
 
