@@ -148,3 +148,34 @@ def get_recent_summary():
         }
     finally:
         con.close()
+
+def get_stalled_initiatives(limit: int = 5):
+    """Retrieve initiatives stuck in a non-terminal phase with highest idle time."""
+    con = get_db_connection()
+    try:
+        query = """
+        SELECT 
+            id, 
+            title, 
+            phase, 
+            url,
+            DATE_DIFF('day', CAST(updated_at AS DATE), CURRENT_DATE()) as days_stalled
+        FROM initiatives
+        WHERE phase NOT IN ('done', 'rejected', 'archived')
+        ORDER BY updated_at ASC
+        LIMIT ?
+        """
+        res = con.execute(query, [limit])
+        try:
+            records = res.df().to_dict(orient='records')
+        except Exception:
+            columns = [col[0] for col in res.description]
+            records = [dict(zip(columns, row)) for row in res.fetchall()]
+            
+        for r in records:
+            if not r.get('url'):
+                r['url'] = f"https://rahvaalgatus.ee/initiatives/{r['id']}"
+                
+        return records
+    finally:
+        con.close()

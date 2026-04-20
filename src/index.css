@@ -234,3 +234,45 @@ a {
   color: inherit;
 }
 
+/* Phase Funnel */
+.funnel-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  align-items: center;
+}
+.funnel-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--panel-border);
+  padding: 0.8rem 1.2rem;
+  border-radius: 8px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+.funnel-row span {
+  font-weight: 600;
+  white-space: nowrap;
+}
+.funnel-row small {
+  font-weight: 400;
+  opacity: 0.8;
+  margin-left: 0.5rem;
+}
+
+/* Stalled items */
+.stalled-badge {
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+

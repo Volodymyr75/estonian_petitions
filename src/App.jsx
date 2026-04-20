@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Activity, Users, FileText, Zap, ChevronRight, BarChart3, TrendingUp } from 'lucide-react';
+import { Activity, Users, FileText, Zap, ChevronRight, BarChart3, TrendingUp, Filter, AlertTriangle } from 'lucide-react';
 
 const Sparkline = ({ data }) => {
   if (!data || data.length < 2) {
@@ -43,6 +43,7 @@ function App() {
   const [trending, setTrending] = useState([]);
   const [phases, setPhases] = useState([]);
   const [summary, setSummary] = useState(null);
+  const [stalled, setStalled] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Simple translations for MVP
@@ -72,7 +73,11 @@ function App() {
       latest_activity: "Latest platform activity",
       on: "on",
       velocity: "sig./day",
-      growth: "7d growth"
+      growth: "7d growth",
+      process: "Process & Funnel",
+      funnel_title: "Phase Funnel",
+      stalled_title: "Stalled Initiatives",
+      idle_days: "days idle"
     },
     et: {
       title: "Eesti Rahvaalgatused",
@@ -99,29 +104,36 @@ function App() {
       latest_activity: "Viimane tegevus platvormil",
       on: "kuupäeval",
       velocity: "allkirja/päev",
-      growth: "7p kasv"
+      growth: "7p kasv",
+      process: "Protsess ja Lehter",
+      funnel_title: "Faaside Lehter",
+      stalled_title: "Seisvad Algatused",
+      idle_days: "päeva ootel"
     }
   };
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [kpiRes, trendRes, phaseRes, sumRes] = await Promise.all([
+        const [kpiRes, trendRes, phaseRes, sumRes, stalledRes] = await Promise.all([
           fetch('/api/kpis'),
           fetch('/api/trending?limit=5'),
           fetch('/api/phases'),
-          fetch('/api/summary')
+          fetch('/api/summary'),
+          fetch('/api/stalled')
         ]);
         
         const kpiData = await kpiRes.json();
         const trendData = await trendRes.json();
         const phaseData = await phaseRes.json();
         const sumData = await sumRes.json();
+        const stalledData = await stalledRes.json();
         
         setKpis(kpiData);
         setTrending(trendData);
         setPhases(phaseData);
         setSummary(sumData);
+        setStalled(stalledData);
       } catch (err) {
         console.error("Error fetching data:", err);
       } finally {
@@ -154,6 +166,20 @@ function App() {
   };
 
   const getPhaseName = (slug) => activeT[`phase_${slug}`] || activeT.phase_other || slug;
+
+  const getPhaseCount = (phase) => {
+    const p = phases.find(p => p.phase === phase);
+    return p ? p.count : 0;
+  };
+  
+  const funnelData = [
+    { id: 'total', label: activeT.total_initiatives, count: kpis?.total_initiatives || 0, color: '#3b82f6' },
+    { id: 'sign', label: getPhaseName('sign'), count: getPhaseCount('sign'), color: '#10b981' },
+    { id: 'parliament', label: getPhaseName('parliament'), count: getPhaseCount('parliament'), color: '#8b5cf6' },
+    { id: 'government', label: getPhaseName('government'), count: getPhaseCount('government'), color: '#eab308' },
+    { id: 'done', label: getPhaseName('done'), count: getPhaseCount('done'), color: '#64748b' }
+  ];
+  const maxFunnel = funnelData[0].count || 1;
 
   return (
     <div className="container">
@@ -251,6 +277,47 @@ function App() {
               ))}
             </div>
           </div>
+        </div>
+
+        {/* BLOCK 3: PROCESS */}
+        <div className="dashboard-grid" style={{gridTemplateColumns: '1fr 1fr'}}>
+          
+          <div className="glass-panel">
+            <h2 className="section-title"><Filter size={20} color="#8b5cf6"/> {activeT.funnel_title}</h2>
+            <div className="funnel-container">
+              {funnelData.map((step) => {
+                const width = Math.max(25, (step.count / maxFunnel) * 100);
+                return (
+                  <div key={step.id} className="funnel-row" style={{width: `${width}%`, borderLeft: `4px solid ${step.color}`}}>
+                    <span style={{color: step.color}}>{step.label}</span>
+                    <span>{step.count.toLocaleString()}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          
+          <div className="glass-panel">
+            <h2 className="section-title"><AlertTriangle size={20} color="#fca5a5"/> {activeT.stalled_title}</h2>
+            <div>
+              {stalled.map(item => (
+                <a href={item.url} target="_blank" rel="noopener noreferrer" className="list-item" key={item.id} style={{display:'flex', textDecoration:'none', color:'inherit'}}>
+                  <div className="item-info" style={{flex: 1}}>
+                    <h4 style={{fontSize: '1.05rem', whiteSpace: 'normal', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'}}>{item.title}</h4>
+                    <span style={{color: phaseColors[item.phase] || '#cbd5e1', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.5px'}}>{getPhaseName(item.phase)}</span>
+                  </div>
+                  <div>
+                    <span className="stalled-badge">{item.days_stalled} {activeT.idle_days}</span>
+                    <button style={{background:'transparent', border:'none', color:'var(--accent)', cursor:'pointer', marginLeft:'0.5rem'}}>
+                      <ChevronRight size={20}/>
+                    </button>
+                  </div>
+                </a>
+              ))}
+              {stalled.length === 0 && <p style={{color: 'var(--text-muted)'}}>No stalled initiatives.</p>}
+            </div>
+          </div>
+
         </div>
 
       </main>
