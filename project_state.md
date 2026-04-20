@@ -13,9 +13,15 @@
 
 ## 2. Current Status
 **Current Phase:** Phase 2 (Core Analytics & Dashboard) is IN PROGRESS.
-**Last Update:** April 19, 2026.
+**Last Update:** April 20, 2026.
 **Overall Progress:** 
-Foundational data infrastructure and API layers are established. The local DuckDB database was successfully migrated to **MotherDuck** (`estonia_petitions`). The project is successfully linked to GitHub and deployed live on **Vercel**. End-to-end communication from the MotherDuck cloud database to the Vercel Python API, and finally to the React frontend, is fully functional (MVP Skeleton is complete). We are currently building out the complex analytical blocks (Momentum, Process, etc.) for the dashboard.
+Foundational data infrastructure and API layers are established. The local DuckDB database was successfully migrated to **MotherDuck** (`estonia_petitions`). The project is successfully linked to GitHub and deployed live on **Vercel**. End-to-end communication from the MotherDuck cloud database to the Vercel Python API, and finally to the React frontend, is fully functional. 
+
+We have successfully completed two major analytical dashboard blocks:
+1. **Overview Block:** Live KPI metrics, a stacked-bar Phase Distribution visualizer, and an automated Recent Platform Activity summary based on active metadata logs.
+2. **Momentum Block:** Shows trending active petitions, their raw signature velocity (+X sig./day), and renders custom SVG Sparklines from parsed 7-day snapshot arrays directly parsed natively via MotherDuck SQL.
+
+The immediate next step is building out the Process metrics.
 
 ## 3. Completed Phases & Milestones
 
@@ -28,39 +34,35 @@ Foundational data infrastructure and API layers are established. The local DuckD
 - **Migration:** Created a python script to automatically migrate the local `.duckdb` tables to a cloud `MotherDuck` database securely.
 
 ### Phase 2: Core Analytics & Dashboard (In Progress)
-- Extracted and safely stored 1,000+ historical lifecycle events (e.g., sent-to-parliament, milestone-100) referencing the primary initiatives.
-- Developed `services/analytics.py` and `services/initiatives.py` pulling logic (completely decoupled from UI to remain MCP-ready).
+- Extracted and safely stored 1,000+ historical lifecycle events referencing the primary initiatives.
+- Developed `services/analytics.py` and `services/initiatives.py` pulling logic (decoupled to remain MCP-ready).
 - Implemented `api/index.py` (FastAPI) mapping decoupled functions to Vercel serverless HTTP routes.
-- **Infrastructure:** Set up a global exception handler in FastAPI to return Python stack traces as JSON, fixing silent UI loading hangs.
+- **Infrastructure:** Set up a global exception handler in FastAPI to return Python stack traces as JSON.
 - **Deployment:** Automated CI/CD pipeline set up via GitHub to Vercel.
+- **Block 1 (Overview) & Block 2 (Momentum)** are fully coded, linked to analytical SQL APIs, and visually styled.
 
 ## 4. Known Issues, Errors & Troubleshooting Log
-This section covers errors encountered during development and how they were resolved to act as a memory bank and context restorer.
 
 - **`xcrun: error: invalid active developer path`**
-  - **Context:** Occurred during the first automated execution of Python API scripts on MacOS.
   - **Resolution:** Required running `xcode-select --install` in the host terminal to restore python compilation dependencies.
-
-- **`ImportError: attempted relative import with no known parent package`**
-  - **Context:** Triggered when running `python3 etl/daily_sync.py`.
-  - **Resolution:** Modified `daily_sync.py` to dynamically inject the project root into `sys.path`.
-
-- **Rahvaalgatus Events API Accept Header (406 Not Acceptable)**
-  - **Context:** Querying `https://rahvaalgatus.ee/initiative-events`.
-  - **Resolution:** The routing strictly requires `Accept: application/vnd.rahvaalgatus.initiative-event+json; v=1`. Hardcoded this exact header logic.
 
 - **Vercel DuckDB MotherDuck Connection Crash (`NotImplementedException: read_only`)**
   - **Context:** Pushing the MotherDuck connection string `md:` to Vercel but failing to load data.
-  - **Cause:** Using `duckdb.connect(DB_PATH, read_only=True)` with MotherDuck is not supported by the DuckDB driver and throws an unhandled 500 exception.
   - **Resolution:** Added conditional logic in database services to remove the `read_only=True` parameter when the path starts with `md:`.
 
 - **Vercel / AWS Lambda Environment Crash (`IO Error: Can't find the home directory at ''`)**
-  - **Context:** DuckDB attempts to initialize extension space in the user's `$HOME` directory, but AWS Lambda (Vercel Serverless) has a Read-Only filesystem and an empty `HOME` variable.
-  - **Cause:** Since `HOME` is empty `""`, DuckDB immediately throws an IOError before even attempting to connect to MotherDuck. 
-  - **Resolution:** Forced `os.environ["HOME"] = "/tmp"` universally at the top of the python API modules before importing DuckDB. `/tmp` is the only writable directory allocated to Vercel serverless functions.
+  - **Context:** DuckDB attempts to initialize extension space in the user's `$HOME` directory, but AWS Lambda has an empty `HOME` variable.
+  - **Resolution:** Forced `os.environ["HOME"] = "/tmp"` universally at the top of the python API modules before importing DuckDB.
+
+- **Missing specific 'Phase' tags defaulting to "Other" in React**
+  - **Context:** Rahvaalgatus API uses many internal phase sub-tags (`edit`, `done`, `government`). The React dictionary fallback mapped them all identical generic "Other" strings.
+  - **Resolution:** Explicitly added language dictionary lookups and hex color assignments for all derived phase strings (`#8b5cf6` for done, etc.).
+
+- **Sparkline missing data visual context**
+  - **Context:** Initial deployment of Momentum block shows flatlines/dots for 7-day sparklines.
+  - **Resolution:** Mathematical behavior is correct; the `initiative_snapshots` table currently only possesses 1 day of cron-driven data gathering. Native visual fallback prevents UX crash.
 
 ## 5. Next Steps
-- **Dashboard Expansion (Phase 2):** Fully build out the Momentum analytics block (growth dynamics) and Process metrics (lifecycle funnel).
+- **Dashboard Expansion (Phase 2):** Fully build out the Process metrics block (lifecycle timelines, event funnels).
 - **Phase 3 (Institutional Layer):** Integrate the Riigikogu Open Data API. We need to fetch parliamentary voting data and securely link it to initiatives that reached the parliament floor.
 - **Phase 4 (AI Copilot & MCP):** Expose existing python `services/` logic as official Model Context Protocol tools.
-- **Phase 5 (Infrastructure):** Setup automated GitHub Actions (`.github/workflows/daily_sync.yml`) to trigger the MotherDuck daily sync independently.
