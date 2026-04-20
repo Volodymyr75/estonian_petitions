@@ -4,7 +4,7 @@ import { Activity, Users, FileText, Zap, ChevronRight, BarChart3, TrendingUp } f
 const Sparkline = ({ data }) => {
   if (!data || data.length < 2) {
     return (
-      <svg viewBox="0 0 100 30" style={{width: '60px', height: '30px', overflow: 'visible'}}>
+      <svg viewBox="0 0 100 30" style={{width: '60px', height: '30px', overflow: 'visible'}} title="Sparkline needs 2+ days of data">
         <circle cx="50" cy="15" r="3" fill="#3b82f6" />
         <line x1="0" y1="15" x2="100" y2="15" stroke="#3b82f6" strokeWidth="2" strokeDasharray="4 4" opacity="0.3" />
       </svg>
@@ -234,8 +234,9 @@ function App() {
                   <div className="item-info" style={{flex: 1}}>
                     <h4 style={{fontSize: '1.1rem'}}>{item.title}</h4>
                     <span style={{color: '#fff', fontWeight: 500, fontSize: '0.95rem'}}>{item.signatures_count.toLocaleString()}</span> {activeT.signatures}
-                    {item.velocity > 0 && (
-                      <span style={{marginLeft: '1rem', color: '#10b981', fontSize: '0.85rem', fontWeight: 500, background: 'rgba(16, 185, 129, 0.1)', padding:'0.2rem 0.6rem', borderRadius:'999px'}}>
+                    <span className="badge badge-sign" style={{marginLeft: '0.8rem', fontSize: '0.7rem', padding: '0.15rem 0.5rem'}}>{activeT.phase_sign}</span>
+                    {item.velocity >= 0 && (
+                      <span style={{marginLeft: '0.8rem', color: '#10b981', fontSize: '0.85rem', fontWeight: 500, background: 'rgba(16, 185, 129, 0.1)', padding:'0.2rem 0.6rem', borderRadius:'999px'}} title="Average daily growth over 7 days">
                         +{item.velocity} {activeT.velocity}
                       </span>
                     )}
