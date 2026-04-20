@@ -26,6 +26,9 @@ function App() {
       phase_processing: "Processing",
       phase_completed: "Completed",
       phase_archived: "Archived",
+      phase_done: "Done",
+      phase_edit: "Draft/Edit",
+      phase_government: "Government",
       phase_rejected: "Rejected",
       phase_other: "Other",
       summary_title: "Recent Platform Activity",
@@ -48,6 +51,9 @@ function App() {
       phase_processing: "Menetluses",
       phase_completed: "Lõpetatud",
       phase_archived: "Arhiveeritud",
+      phase_done: "Tehtud",
+      phase_edit: "Koostamisel",
+      phase_government: "Valitsus",
       phase_rejected: "Tagasi lükatud",
       phase_other: "Muu",
       summary_title: "Hiljutine Aktiivsus",
@@ -101,7 +107,10 @@ function App() {
     'processing': '#f59e0b', // yellow 
     'completed': '#8b5cf6', // purple
     'archived': '#64748b', // gray
-    'rejected': '#ef4444' // red
+    'rejected': '#ef4444', // red
+    'done': '#8b5cf6',     // purple (same as completed)
+    'edit': '#94a3b8',     // light gray (drafting)
+    'government': '#eab308'// yellow
   };
 
   const getPhaseName = (slug) => activeT[`phase_${slug}`] || activeT.phase_other || slug;
