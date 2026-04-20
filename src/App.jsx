@@ -1,5 +1,41 @@
 import { useState, useEffect } from 'react';
-import { Activity, Users, FileText, Zap, ChevronRight, BarChart3 } from 'lucide-react';
+import { Activity, Users, FileText, Zap, ChevronRight, BarChart3, TrendingUp } from 'lucide-react';
+
+const Sparkline = ({ data }) => {
+  if (!data || data.length < 2) {
+    return (
+      <svg viewBox="0 0 100 30" style={{width: '60px', height: '30px', overflow: 'visible'}}>
+        <circle cx="50" cy="15" r="3" fill="#3b82f6" />
+        <line x1="0" y1="15" x2="100" y2="15" stroke="#3b82f6" strokeWidth="2" strokeDasharray="4 4" opacity="0.3" />
+      </svg>
+    );
+  }
+  
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const range = max - min || 1;
+  const padding = 5;
+  const innerHeight = 30 - padding * 2;
+  
+  const points = data.map((val, i) => {
+    const x = (i / (data.length - 1)) * 100;
+    const y = 30 - padding - ((val - min) / range) * innerHeight;
+    return `${x},${y}`;
+  }).join(' ');
+
+  return (
+    <svg viewBox="0 0 100 30" style={{width: '80px', height: '30px', overflow: 'visible', filter: 'drop-shadow(0px 2px 4px rgba(59,130,246,0.5))'}}>
+      <polyline 
+        fill="none" 
+        stroke="#60a5fa" 
+        strokeWidth="2.5" 
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        points={points} 
+      />
+    </svg>
+  );
+};
 
 function App() {
   const [lang, setLang] = useState('en');
@@ -34,7 +70,9 @@ function App() {
       summary_title: "Recent Platform Activity",
       new_initiatives: "New initiatives in the last 30 days",
       latest_activity: "Latest platform activity",
-      on: "on"
+      on: "on",
+      velocity: "sig./day",
+      growth: "7d growth"
     },
     et: {
       title: "Eesti Rahvaalgatused",
@@ -59,7 +97,9 @@ function App() {
       summary_title: "Hiljutine Aktiivsus",
       new_initiatives: "Uusi algatusi viimase 30 päeva jooksul",
       latest_activity: "Viimane tegevus platvormil",
-      on: "kuupäeval"
+      on: "kuupäeval",
+      velocity: "allkirja/päev",
+      growth: "7p kasv"
     }
   };
 
@@ -184,17 +224,25 @@ function App() {
         {/* BLOCK 2: MOMENTUM */}
         <div className="dashboard-grid" style={{gridTemplateColumns: '1fr'}}>
           <div className="glass-panel">
-            <h2 className="section-title"><Zap size={20} color="#fbbf24"/> {activeT.momentum}</h2>
+            <h2 className="section-title"><TrendingUp size={20} color="#fbbf24"/> {activeT.momentum}</h2>
             <div>
-              {trending.map(item => (
-                <a href={item.url} target="_blank" rel="noopener noreferrer" className="list-item" key={item.id} style={{display:'flex', textDecoration:'none', color:'inherit'}}>
-                  <div className="item-info">
-                    <h4>{item.title}</h4>
-                    <span>{item.signatures_count.toLocaleString()} {activeT.signatures}</span>
+              {trending.map((item, idx) => (
+                <a href={item.url} target="_blank" rel="noopener noreferrer" className="list-item" key={item.id} style={{display:'flex', alignItems: 'center', textDecoration:'none', color:'inherit'}}>
+                  <div style={{marginRight: '1.2rem', color: 'var(--text-muted)', fontWeight: 600, fontSize: '1.2rem'}}>
+                    {idx + 1}
                   </div>
-                  <div>
-                    <span className="badge badge-sign">{activeT.phase_sign}</span>
-                    <button style={{background:'transparent', border:'none', color:'var(--accent)', cursor:'pointer', marginLeft:'1rem'}}>
+                  <div className="item-info" style={{flex: 1}}>
+                    <h4 style={{fontSize: '1.1rem'}}>{item.title}</h4>
+                    <span style={{color: '#fff', fontWeight: 500, fontSize: '0.95rem'}}>{item.signatures_count.toLocaleString()}</span> {activeT.signatures}
+                    {item.velocity > 0 && (
+                      <span style={{marginLeft: '1rem', color: '#10b981', fontSize: '0.85rem', fontWeight: 500, background: 'rgba(16, 185, 129, 0.1)', padding:'0.2rem 0.6rem', borderRadius:'999px'}}>
+                        +{item.velocity} {activeT.velocity}
+                      </span>
+                    )}
+                  </div>
+                  <div style={{display:'flex', alignItems:'center', gap:'1.5rem'}}>
+                    <Sparkline data={item.history_array} />
+                    <button style={{background:'transparent', border:'none', color:'var(--accent)', cursor:'pointer'}}>
                       <ChevronRight size={20}/>
                     </button>
                   </div>

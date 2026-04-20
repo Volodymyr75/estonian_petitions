@@ -42,10 +42,25 @@ def get_trending_initiatives(limit: int = 5):
     con = get_db_connection()
     try:
         query = """
-        SELECT id, title, phase, signatures_count, url
-        FROM initiatives
-        WHERE phase = 'sign'
-        ORDER BY signatures_count DESC
+        SELECT 
+            i.id, 
+            i.title, 
+            i.phase, 
+            i.signatures_count, 
+            i.url,
+            (
+                SELECT list(signatures_count) 
+                FROM (
+                    SELECT signatures_count 
+                    FROM initiative_snapshots s 
+                    WHERE s.initiative_id = i.id 
+                      AND snapshot_date >= current_date() - interval 7 day
+                    ORDER BY snapshot_date ASC
+                )
+            ) as history_7d
+        FROM initiatives i
+        WHERE i.phase = 'sign'
+        ORDER BY i.signatures_count DESC
         LIMIT ?
         """
         res = con.execute(query, [limit])
@@ -58,6 +73,31 @@ def get_trending_initiatives(limit: int = 5):
         for r in records:
             if not r.get('url'):
                 r['url'] = f"https://rahvaalgatus.ee/initiatives/{r['id']}"
+            
+            # Process history array
+            history = r.get('history_7d') or []
+            if not history and r.get('signatures_count'):
+                history = [r['signatures_count']]
+                
+            # Guarantee history ends with the most live data
+            if history and history[-1] != r['signatures_count']:
+                history.append(r['signatures_count'])
+                
+            r['history_array'] = history
+            
+            # Calculate velocity
+            if len(history) >= 2:
+                growth = history[-1] - history[0]
+                days = len(history) - 1
+                velocity = round(growth / days) if days > 0 else 0
+            else:
+                growth = 0
+                velocity = 0
+                
+            r['growth_7d'] = growth
+            r['velocity'] = velocity
+            r.pop('history_7d', None)
+        
         
         return records
     finally:
