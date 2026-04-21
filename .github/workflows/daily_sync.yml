@@ -2,7 +2,7 @@ name: Daily MotherDuck Sync
 
 on:
   schedule:
-    - cron: '0 2 * * *' # Run at 02:00 UTC daily
+    - cron: '0 7 * * *' # Run at 07:00 UTC daily
   workflow_dispatch: # Allows manual trigger from GitHub UI
 
 jobs:
@@ -24,8 +24,30 @@ jobs:
         pip install requests duckdb pydantic python-dotenv
         
     - name: Run ETL Sync Script
+      id: sync_script
       env:
         MOTHERDUCK_TOKEN: ${{ secrets.MOTHERDUCK_TOKEN }}
         DB_PATH: md:estonia_petitions
       run: |
         python etl/daily_sync.py
+
+    - name: Send Telegram Notification (Success)
+      if: success()
+      uses: appleboy/telegram-action@master
+      with:
+        to: ${{ secrets.TELEGRAM_TO }}
+        token: ${{ secrets.TELEGRAM_TOKEN }}
+        message: |
+          🟢 *Estonian Civic Analytics*
+          Daily MotherDuck Sync completed successfully\!
+
+    - name: Send Telegram Notification (Failure)
+      if: failure()
+      uses: appleboy/telegram-action@master
+      with:
+        to: ${{ secrets.TELEGRAM_TO }}
+        token: ${{ secrets.TELEGRAM_TOKEN }}
+        message: |
+          🔴 *Estonian Civic Analytics*
+          ERROR: Daily MotherDuck Sync FAILED\!
+          Review logs here: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
