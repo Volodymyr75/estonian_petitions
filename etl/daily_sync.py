@@ -40,28 +40,19 @@ def sync_initiatives():
     today = datetime.now().date().isoformat()
     now = datetime.now()
     
-    upsert_query = """
+    delete_initiative_query = "DELETE FROM initiatives WHERE id = ?"
+    insert_initiative_query = """
     INSERT INTO initiatives (
         id, slug, title, target_type, target_name, phase, status, 
         deadline_at, signatures_count, source, updated_at, ingested_at
     ) 
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT (id) DO UPDATE SET
-        title = EXCLUDED.title,
-        phase = EXCLUDED.phase,
-        status = EXCLUDED.status,
-        deadline_at = EXCLUDED.deadline_at,
-        signatures_count = EXCLUDED.signatures_count,
-        updated_at = EXCLUDED.updated_at
     """
     
-    snapshot_query = """
+    delete_snapshot_query = "DELETE FROM initiative_snapshots WHERE initiative_id = ? AND snapshot_date = ?"
+    insert_snapshot_query = """
     INSERT INTO initiative_snapshots (initiative_id, snapshot_date, signatures_count, phase, status, source)
     VALUES (?, ?, ?, ?, ?, ?)
-    ON CONFLICT (initiative_id, snapshot_date) DO UPDATE SET
-        signatures_count = EXCLUDED.signatures_count,
-        phase = EXCLUDED.phase,
-        status = EXCLUDED.status;
     """
 
     for item in initiatives:
@@ -79,12 +70,16 @@ def sync_initiatives():
         status = phase
         deadline_parsed = parse_datetime(deadline)
 
-        con.execute(upsert_query, (
+        # MotherDuck-compatible upsert: DELETE then INSERT
+        con.execute(delete_initiative_query, [init_id])
+        con.execute(insert_initiative_query, (
             init_id, slug, title, 'government', target, phase, status,
             deadline_parsed, sig_count, 'rahvaalgatus', now, now
         ))
         
-        con.execute(snapshot_query, (
+        # Daily snapshot: DELETE then INSERT
+        con.execute(delete_snapshot_query, [init_id, today])
+        con.execute(insert_snapshot_query, (
             init_id, today, sig_count, phase, status, 'rahvaalgatus'
         ))
 
@@ -93,10 +88,10 @@ def sync_initiatives():
     print("Fetching events from Rahvaalgatus API...")
     events = client.get_events()
     
-    event_insert_query = """
+    delete_event_query = "DELETE FROM initiative_events WHERE event_id = ?"
+    insert_event_query = """
     INSERT INTO initiative_events (event_id, initiative_id, event_type, event_title, event_date, actor, source, ingested_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT (event_id) DO NOTHING;
     """
     
     for event in events:
@@ -108,9 +103,12 @@ def sync_initiatives():
         title = event.get('title')
         occurred = parse_datetime(event.get('occurredAt'))
         
-        con.execute(event_insert_query, (
-            unique_event_id, init_id, eid, title, occurred, 'rahvaalgatus', 'rahvaalgatus', now
-        ))
+        # Only insert if not already present (events are immutable)
+        existing = con.execute("SELECT 1 FROM initiative_events WHERE event_id = ?", [unique_event_id]).fetchone()
+        if not existing:
+            con.execute(insert_event_query, (
+                unique_event_id, init_id, eid, title, occurred, 'rahvaalgatus', 'rahvaalgatus', now
+            ))
         
     print(f"Synced {len(events)} events.")
     con.close()
