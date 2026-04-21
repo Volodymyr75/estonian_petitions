@@ -1,7 +1,12 @@
-import os
 import sys
-import duckdb
 from datetime import datetime
+
+# Fix for DuckDB in serverless/container environments (GitHub Actions/Vercel)
+# DuckDB needs a writable home directory for extensions and configuration.
+if os.environ.get("GITHUB_ACTIONS") == "true" or not os.environ.get("HOME"):
+    os.environ["HOME"] = "/tmp"
+
+import duckdb
 
 # Add project root to path for direct script execution
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -110,4 +115,17 @@ def sync_initiatives():
     con.close()
 
 if __name__ == "__main__":
-    sync_initiatives()
+    try:
+        print(f"Starting sync at {datetime.now()}")
+        if DB_PATH.startswith("md:"):
+            print("Connecting to MotherDuck cloud database...")
+        else:
+            print(f"Connecting to local database: {DB_PATH}")
+            
+        sync_initiatives()
+        print("Sync completed successfully.")
+    except Exception as e:
+        print(f"\nERROR DURING SYNC: {e}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
