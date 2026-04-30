@@ -70,6 +70,9 @@ The immediate next step is building out the Process metrics.
     - Swapped the "Latest Activity" query to retrieve the most recently modified snapshot event directly from the initiatives state.
     - Added a global "Last Updated" timestamp block beneath the dashboard title to clearly indicate the freshness of the UI data.
     - Generated and integrated a custom Estonian-themed favicon to improve aesthetics.
+    - **Follow-up Fix:** Re-styled the "Last Updated" text using CSS margins to resolve UI overlapping with the sub-title.
+    - **Follow-up Fix:** Realized Rahvaalgatus API natively omits `created_at` for initiatives. Appended an ETL post-processing SQL routine to auto-deduce `created_at` from the oldest timestamp in `initiative_events` to fix the "new initiatives" counter.
+    - **Follow-up Fix:** Changed "Trending Initiatives" SQL + Python logic to sort strictly by `velocity` (growth per day) rather than lifetime total signatures, accurately surfacing the *currently* most active petitions.
 
 ## 5. Next Steps
 - **Dashboard Expansion (Phase 2):** Fully build out the Process metrics block (lifecycle timelines, event funnels).
