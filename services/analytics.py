@@ -60,10 +60,8 @@ def get_trending_initiatives(limit: int = 5):
             ) as history_7d
         FROM initiatives i
         WHERE i.phase = 'sign'
-        ORDER BY i.signatures_count DESC
-        LIMIT ?
         """
-        res = con.execute(query, [limit])
+        res = con.execute(query)
         try:
             records = res.df().to_dict(orient='records')
         except Exception:
@@ -98,8 +96,10 @@ def get_trending_initiatives(limit: int = 5):
             r['velocity'] = velocity
             r.pop('history_7d', None)
         
+        # Sort by velocity descending, then by total signatures
+        records.sort(key=lambda x: (x.get('velocity', 0), x.get('signatures_count', 0)), reverse=True)
         
-        return records
+        return records[:limit]
     finally:
         con.close()
 

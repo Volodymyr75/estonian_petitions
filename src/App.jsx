@@ -187,7 +187,7 @@ function App() {
         <h1>{activeT.title}</h1>
         <p>{activeT.subtitle}</p>
         {summary?.last_update && (
-           <p style={{fontSize: '0.85rem', color: 'var(--text-muted, #94a3b8)', marginTop: '-0.5rem', marginBottom: '1rem'}}>
+           <p style={{fontSize: '0.85rem', color: 'var(--text-muted, #94a3b8)', margin: '0.5rem 0 1rem 0'}}>
              {lang === 'en' ? 'Last Updated:' : 'Viimati uuendatud:'} {new Date(summary.last_update).toLocaleString()}
            </p>
         )}

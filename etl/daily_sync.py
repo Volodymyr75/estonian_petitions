@@ -111,6 +111,18 @@ def sync_initiatives():
             ))
         
     print(f"Synced {len(events)} events.")
+    
+    print("Updating created_at for initiatives based on earliest events...")
+    con.execute("""
+        UPDATE initiatives 
+        SET created_at = (
+            SELECT min(event_date) 
+            FROM initiative_events 
+            WHERE initiative_id = initiatives.id
+        )
+        WHERE created_at IS NULL;
+    """)
+    
     con.close()
 
 if __name__ == "__main__":
