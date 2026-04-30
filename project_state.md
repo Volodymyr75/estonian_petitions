@@ -13,7 +13,7 @@
 
 ## 2. Current Status
 **Current Phase:** Phase 2 (Core Analytics & Dashboard) is IN PROGRESS.
-**Last Update:** April 20, 2026.
+**Last Update:** April 30, 2026.
 **Overall Progress:** 
 Foundational data infrastructure and API layers are established. The local DuckDB database was successfully migrated to **MotherDuck** (`estonia_petitions`). The project is successfully linked to GitHub and deployed live on **Vercel**. End-to-end communication from the MotherDuck cloud database to the Vercel Python API, and finally to the React frontend, is fully functional. 
 
@@ -61,6 +61,15 @@ The immediate next step is building out the Process metrics.
 - **Sparkline missing data visual context**
   - **Context:** Initial deployment of Momentum block shows flatlines/dots for 7-day sparklines.
   - **Resolution:** Mathematical behavior is correct; the `initiative_snapshots` table currently only possesses 1 day of cron-driven data gathering. Native visual fallback prevents UX crash.
+
+- **Analytics Queries Returning Incorrect or Missing Data ("8 new petitions", "empty trends")**
+  - **Context:** The "Recent Platform Activity" query relied solely on `created_at` which is frequently null for older petitions, leading to an inaccurate representation of new data. Additionally, the trends query looked backwards from `current_date()`, but when scraping is paused/delayed, the 7-day window returned no data, causing empty sparklines. The "Latest event" relied on an inactive `initiative_events` table (last updated March 2024).
+  - **Resolution:** 
+    - Updated the "new petitions" query to fallback to `ingested_at` via `coalesce(created_at, ingested_at)`.
+    - Rewrote the trends query to dynamically calculate the 7-day window backwards from the maximum available `snapshot_date` in the `initiative_snapshots` table.
+    - Swapped the "Latest Activity" query to retrieve the most recently modified snapshot event directly from the initiatives state.
+    - Added a global "Last Updated" timestamp block beneath the dashboard title to clearly indicate the freshness of the UI data.
+    - Generated and integrated a custom Estonian-themed favicon to improve aesthetics.
 
 ## 5. Next Steps
 - **Dashboard Expansion (Phase 2):** Fully build out the Process metrics block (lifecycle timelines, event funnels).

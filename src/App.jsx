@@ -186,6 +186,11 @@ function App() {
       <header>
         <h1>{activeT.title}</h1>
         <p>{activeT.subtitle}</p>
+        {summary?.last_update && (
+           <p style={{fontSize: '0.85rem', color: 'var(--text-muted, #94a3b8)', marginTop: '-0.5rem', marginBottom: '1rem'}}>
+             {lang === 'en' ? 'Last Updated:' : 'Viimati uuendatud:'} {new Date(summary.last_update).toLocaleString()}
+           </p>
+        )}
         <div className="lang-switch">
           <button className={lang === 'en' ? 'active' : ''} onClick={() => setLang('en')}>EN</button>
           <button className={lang === 'et' ? 'active' : ''} onClick={() => setLang('et')}>ET</button>

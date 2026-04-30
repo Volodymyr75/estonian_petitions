@@ -54,7 +54,7 @@ def get_trending_initiatives(limit: int = 5):
                     SELECT signatures_count 
                     FROM initiative_snapshots s 
                     WHERE s.initiative_id = i.id 
-                      AND snapshot_date >= current_date() - interval 7 day
+                      AND snapshot_date >= (SELECT max(snapshot_date) FROM initiative_snapshots) - interval 7 day
                     ORDER BY snapshot_date ASC
                 )
             ) as history_7d
@@ -126,25 +126,31 @@ def get_recent_summary():
     """Retrieve recent platform activity summary."""
     con = get_db_connection()
     try:
-        # 1. New initiatives in last 30 days
-        q1 = "SELECT count(*) FROM initiatives WHERE created_at >= current_date() - interval 30 day"
+        # 1. New initiatives in last 30 days (fallback to ingested_at if created_at is mostly null)
+        q1 = "SELECT count(*) FROM initiatives WHERE coalesce(created_at, ingested_at) >= (SELECT max(coalesce(created_at, ingested_at)) FROM initiatives) - interval 30 day"
         new_count = con.execute(q1).fetchone()[0]
 
         # 2. Latest event
-        q2 = "SELECT event_title, actor, event_date FROM initiative_events ORDER BY event_date DESC LIMIT 1"
+        # initiative_events might be stale, let's just get the last updated initiative
+        q2 = "SELECT title, 'System', max(snapshot_date) FROM initiative_snapshots JOIN initiatives i ON i.id = initiative_id GROUP BY title ORDER BY max(snapshot_date) DESC LIMIT 1"
         latest_event = con.execute(q2).fetchone()
         
         event_dict = None
         if latest_event:
             event_dict = {
-                "title": latest_event[0],
+                "title": f"Update: {latest_event[0][:50]}...",
                 "actor": latest_event[1],
                 "date": latest_event[2].isoformat() if hasattr(latest_event[2], 'isoformat') else latest_event[2]
             }
 
+        # 3. Last update time
+        last_update_q = "SELECT max(snapshot_date) FROM initiative_snapshots"
+        last_update = con.execute(last_update_q).fetchone()[0]
+
         return {
             "new_in_30_days": new_count,
-            "latest_event": event_dict
+            "latest_event": event_dict,
+            "last_update": last_update.isoformat() if hasattr(last_update, 'isoformat') else last_update
         }
     finally:
         con.close()
