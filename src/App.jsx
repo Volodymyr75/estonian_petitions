@@ -1,39 +1,37 @@
 import { useState, useEffect } from 'react';
 import { Activity, Users, FileText, Zap, ChevronRight, BarChart3, TrendingUp, Filter, AlertTriangle } from 'lucide-react';
+import { LineChart, Line, Tooltip, ResponsiveContainer, YAxis } from 'recharts';
 
-const Sparkline = ({ data }) => {
-  if (!data || data.length < 2) {
-    return (
-      <svg viewBox="0 0 100 30" style={{width: '60px', height: '30px', overflow: 'visible'}} title="Sparkline needs 2+ days of data">
-        <circle cx="50" cy="15" r="3" fill="#3b82f6" />
-        <line x1="0" y1="15" x2="100" y2="15" stroke="#3b82f6" strokeWidth="2" strokeDasharray="4 4" opacity="0.3" />
-      </svg>
-    );
-  }
+const RechartsSparkline = ({ data }) => {
+  if (!data || data.length < 2) return <div style={{width: '120px', height: '40px'}}></div>;
   
+  const chartData = data.map((val, i) => ({ value: val, day: i + 1 }));
   const min = Math.min(...data);
   const max = Math.max(...data);
-  const range = max - min || 1;
-  const padding = 5;
-  const innerHeight = 30 - padding * 2;
-  
-  const points = data.map((val, i) => {
-    const x = (i / (data.length - 1)) * 100;
-    const y = 30 - padding - ((val - min) / range) * innerHeight;
-    return `${x},${y}`;
-  }).join(' ');
+  const diff = max - min || 1;
+  const domain = [Math.max(0, min - diff * 0.1), max + diff * 0.1];
+
+  const CustomTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div style={{ background: 'rgba(15, 23, 42, 0.95)', border: '1px solid rgba(59, 130, 246, 0.3)', padding: '4px 8px', borderRadius: '4px', fontSize: '0.75rem', color: '#f8fafc', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.5)' }}>
+          {payload[0].value.toLocaleString()} sig.
+        </div>
+      );
+    }
+    return null;
+  };
 
   return (
-    <svg viewBox="0 0 100 30" style={{width: '80px', height: '30px', overflow: 'visible', filter: 'drop-shadow(0px 2px 4px rgba(59,130,246,0.5))'}}>
-      <polyline 
-        fill="none" 
-        stroke="#60a5fa" 
-        strokeWidth="2.5" 
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        points={points} 
-      />
-    </svg>
+    <div style={{ width: '120px', height: '40px' }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={chartData}>
+          <YAxis domain={domain} hide />
+          <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1 }} isAnimationActive={false} />
+          <Line type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={2.5} dot={false} activeDot={{ r: 4, fill: '#60a5fa', stroke: '#fff', strokeWidth: 1 }} isAnimationActive={false} />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
   );
 };
 
@@ -258,27 +256,26 @@ function App() {
             <h2 className="section-title"><TrendingUp size={20} color="#fbbf24"/> {activeT.momentum}</h2>
             <div>
               {trending.map((item, idx) => (
-                <a href={item.url} target="_blank" rel="noopener noreferrer" className="list-item" key={item.id} style={{display:'flex', alignItems: 'center', textDecoration:'none', color:'inherit'}}>
-                  <div style={{marginRight: '1.2rem', color: 'var(--text-muted)', fontWeight: 600, fontSize: '1.2rem'}}>
-                    {idx + 1}
+                <div className="list-item" key={item.id} style={{display:'flex', alignItems: 'center'}}>
+                  <a href={item.url} target="_blank" rel="noopener noreferrer" style={{display:'flex', flex: 1, textDecoration:'none', color:'inherit', alignItems: 'center'}}>
+                    <div style={{marginRight: '1.2rem', color: 'var(--text-muted)', fontWeight: 600, fontSize: '1.2rem', minWidth: '20px'}}>
+                      {idx + 1}
+                    </div>
+                    <div className="item-info">
+                      <h4 style={{fontSize: '1.1rem'}}>{item.title}</h4>
+                      <span style={{color: '#fff', fontWeight: 500, fontSize: '0.95rem'}}>{item.signatures_count.toLocaleString()}</span> {activeT.signatures}
+                      <span className="badge badge-sign" style={{marginLeft: '0.8rem', fontSize: '0.7rem', padding: '0.15rem 0.5rem'}}>{activeT.phase_sign}</span>
+                      {item.velocity >= 0 && (
+                        <span style={{marginLeft: '0.8rem', color: '#10b981', fontSize: '0.85rem', fontWeight: 500, background: 'rgba(16, 185, 129, 0.1)', padding:'0.2rem 0.6rem', borderRadius:'999px'}} title="Average daily growth over 7 days">
+                          +{item.velocity} {activeT.velocity}
+                        </span>
+                      )}
+                    </div>
+                  </a>
+                  <div style={{display:'flex', alignItems:'center', marginLeft: '1rem'}}>
+                    <RechartsSparkline data={item.history_array} />
                   </div>
-                  <div className="item-info" style={{flex: 1}}>
-                    <h4 style={{fontSize: '1.1rem'}}>{item.title}</h4>
-                    <span style={{color: '#fff', fontWeight: 500, fontSize: '0.95rem'}}>{item.signatures_count.toLocaleString()}</span> {activeT.signatures}
-                    <span className="badge badge-sign" style={{marginLeft: '0.8rem', fontSize: '0.7rem', padding: '0.15rem 0.5rem'}}>{activeT.phase_sign}</span>
-                    {item.velocity >= 0 && (
-                      <span style={{marginLeft: '0.8rem', color: '#10b981', fontSize: '0.85rem', fontWeight: 500, background: 'rgba(16, 185, 129, 0.1)', padding:'0.2rem 0.6rem', borderRadius:'999px'}} title="Average daily growth over 7 days">
-                        +{item.velocity} {activeT.velocity}
-                      </span>
-                    )}
-                  </div>
-                  <div style={{display:'flex', alignItems:'center', gap:'1.5rem'}}>
-                    <Sparkline data={item.history_array} />
-                    <button style={{background:'transparent', border:'none', color:'var(--accent)', cursor:'pointer'}}>
-                      <ChevronRight size={20}/>
-                    </button>
-                  </div>
-                </a>
+                </div>
               ))}
             </div>
           </div>
@@ -289,13 +286,36 @@ function App() {
           
           <div className="glass-panel">
             <h2 className="section-title"><Filter size={20} color="#8b5cf6"/> {activeT.funnel_title}</h2>
-            <div className="funnel-container">
-              {funnelData.map((step) => {
-                const width = Math.max(25, (step.count / maxFunnel) * 100);
+            <div className="funnel-container" style={{ alignItems: 'center', width: '100%' }}>
+              {funnelData.map((step, idx) => {
+                const width = Math.max(30, (step.count / maxFunnel) * 100);
+                
+                let conversion = null;
+                if (idx > 0) {
+                  const prevStep = funnelData[idx - 1];
+                  const percent = prevStep.count > 0 ? Math.round((step.count / prevStep.count) * 100) : 0;
+                  conversion = (
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0.3rem 0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '4px'}}><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+                       {percent}% {lang === 'en' ? 'passed' : 'edasi'}
+                    </div>
+                  );
+                }
+
                 return (
-                  <div key={step.id} className="funnel-row" style={{width: `${width}%`, borderLeft: `4px solid ${step.color}`}}>
-                    <span style={{color: step.color}}>{step.label}</span>
-                    <span>{step.count.toLocaleString()}</span>
+                  <div key={step.id} style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    {conversion}
+                    <div className="funnel-row" style={{ 
+                      width: `${width}%`, 
+                      background: `rgba(255, 255, 255, 0.03)`, 
+                      border: `1px solid ${step.color}40`,
+                      boxShadow: `inset 0 0 10px ${step.color}15`,
+                      justifyContent: 'center', 
+                      gap: '1.5rem' 
+                    }}>
+                      <span style={{ color: step.color, fontSize: '0.95rem' }}>{step.label}</span>
+                      <span style={{ fontSize: '1.25rem' }}>{step.count.toLocaleString()}</span>
+                    </div>
                   </div>
                 );
               })}

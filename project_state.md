@@ -13,7 +13,7 @@
 
 ## 2. Current Status
 **Current Phase:** Phase 2 (Core Analytics & Dashboard) is IN PROGRESS.
-**Last Update:** April 30, 2026.
+**Last Update:** May 10, 2026.
 **Overall Progress:** 
 Foundational data infrastructure and API layers are established. The local DuckDB database was successfully migrated to **MotherDuck** (`estonia_petitions`). The project is successfully linked to GitHub and deployed live on **Vercel**. End-to-end communication from the MotherDuck cloud database to the Vercel Python API, and finally to the React frontend, is fully functional. 
 
@@ -73,6 +73,8 @@ The immediate next step is building out the Process metrics.
     - **Follow-up Fix:** Re-styled the "Last Updated" text using CSS margins to resolve UI overlapping with the sub-title.
     - **Follow-up Fix:** Realized Rahvaalgatus API natively omits `created_at` for initiatives. Appended an ETL post-processing SQL routine to auto-deduce `created_at` from the oldest timestamp in `initiative_events` to fix the "new initiatives" counter.
     - **Follow-up Fix:** Changed "Trending Initiatives" SQL + Python logic to sort strictly by `velocity` (growth per day) rather than lifetime total signatures, accurately surfacing the *currently* most active petitions.
+    - **Follow-up Feature:** Replaced custom static SVG sparklines with `recharts` for interactive hover tooltips (showing precise daily vote counts).
+    - **Follow-up Feature:** Redesigned the "Phase Funnel" into a True Funnel centered layout with step-by-step percentage conversion indicators.
 
 ## 5. Next Steps
 - **Dashboard Expansion (Phase 2):** Fully build out the Process metrics block (lifecycle timelines, event funnels).
