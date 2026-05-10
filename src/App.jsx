@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react';
 import { Activity, Users, FileText, Zap, ChevronRight, BarChart3, TrendingUp, Filter, AlertTriangle } from 'lucide-react';
-import { LineChart, Line, Tooltip, ResponsiveContainer, YAxis } from 'recharts';
+import { LineChart, Line, Tooltip, ResponsiveContainer, YAxis, PieChart, Pie, Cell, Legend } from 'recharts';
 
 const RechartsSparkline = ({ data }) => {
   if (!data || data.length < 2) return <div style={{width: '120px', height: '40px'}}></div>;
@@ -31,7 +30,15 @@ const RechartsSparkline = ({ data }) => {
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={chartData}>
           <YAxis domain={domain} hide />
-          <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1 }} isAnimationActive={false} />
+          <Tooltip 
+            content={<CustomTooltip />} 
+            cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1 }} 
+            isAnimationActive={false} 
+            offset={20}
+            position={{ y: -35 }}
+            allowEscapeViewBox={{ x: true, y: true }}
+            wrapperStyle={{ zIndex: 100 }}
+          />
           <Line type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={2.5} dot={false} activeDot={{ r: 4, fill: '#60a5fa', stroke: '#fff', strokeWidth: 1 }} isAnimationActive={false} />
         </LineChart>
       </ResponsiveContainer>
@@ -261,7 +268,7 @@ function App() {
             <div>
               {trending.map((item, idx) => (
                 <div className="list-item" key={item.id} style={{display:'flex', alignItems: 'center'}}>
-                  <a href={item.url} target="_blank" rel="noopener noreferrer" style={{display:'flex', flex: 1, textDecoration:'none', color:'inherit', alignItems: 'center'}}>
+                  <a href={item.url} target="_blank" rel="noopener noreferrer" className="trending-link" style={{display:'flex', flex: 1, textDecoration:'none', color:'inherit', alignItems: 'center'}}>
                     <div style={{marginRight: '1.2rem', color: 'var(--text-muted)', fontWeight: 600, fontSize: '1.2rem', minWidth: '20px'}}>
                       {idx + 1}
                     </div>
@@ -295,40 +302,92 @@ function App() {
             <h2 className="section-title"><Activity size={20} color="#8b5cf6"/> Fate of Initiatives</h2>
             
             {/* Idea 1: Cards */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '2rem' }}>
-              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>Active Gathering</div>
-                <div style={{ fontSize: '1.5rem', fontWeight: 600, color: '#10b981' }}>{getPhaseCount('sign').toLocaleString()}</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '0.8rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>Active Gathering</div>
+                <div style={{ fontSize: '1.3rem', fontWeight: 600, color: '#10b981' }}>{getPhaseCount('sign').toLocaleString()}</div>
               </div>
-              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>Under Review</div>
-                <div style={{ fontSize: '1.5rem', fontWeight: 600, color: '#f59e0b' }}>{(getPhaseCount('parliament') + getPhaseCount('government')).toLocaleString()}</div>
+              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '0.8rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>Under Review</div>
+                <div style={{ fontSize: '1.3rem', fontWeight: 600, color: '#f59e0b' }}>{(getPhaseCount('parliament') + getPhaseCount('government')).toLocaleString()}</div>
               </div>
-              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>Successfully Done</div>
-                <div style={{ fontSize: '1.5rem', fontWeight: 600, color: '#8b5cf6' }}>{getPhaseCount('done').toLocaleString()}</div>
+              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '0.8rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>Successfully Done</div>
+                <div style={{ fontSize: '1.3rem', fontWeight: 600, color: '#8b5cf6' }}>{getPhaseCount('done').toLocaleString()}</div>
               </div>
-              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>Total Initiatives</div>
-                <div style={{ fontSize: '1.5rem', fontWeight: 600, color: '#3b82f6' }}>{kpis?.total_initiatives?.toLocaleString() || 0}</div>
+              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '0.8rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>Total Initiatives</div>
+                <div style={{ fontSize: '1.3rem', fontWeight: 600, color: '#3b82f6' }}>{kpis?.total_initiatives?.toLocaleString() || 0}</div>
               </div>
             </div>
 
-            {/* Idea 2: Stacked Bar */}
-            <h3 style={{ fontSize: '1rem', color: '#fff', marginBottom: '1rem' }}>Overall Success Rate</h3>
-            {kpis?.total_initiatives > 0 && (
-              <div style={{ width: '100%' }}>
-                <div style={{ display: 'flex', height: '16px', borderRadius: '999px', overflow: 'hidden', background: 'var(--panel-border)', marginBottom: '0.5rem' }}>
-                  <div style={{ width: `${(getPhaseCount('done') / kpis.total_initiatives) * 100}%`, background: '#8b5cf6' }} title="Done" />
-                  <div style={{ width: `${((getPhaseCount('parliament') + getPhaseCount('government')) / kpis.total_initiatives) * 100}%`, background: '#f59e0b' }} title="Under Review" />
-                  <div style={{ width: `${(getPhaseCount('sign') / kpis.total_initiatives) * 100}%`, background: '#10b981' }} title="Active" />
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                  <span>{Math.round((getPhaseCount('done') / kpis.total_initiatives) * 100)}% Reached Final Resolution</span>
-                  <span>{Math.round((getPhaseCount('sign') / kpis.total_initiatives) * 100)}% Currently Active</span>
-                </div>
-              </div>
-            )}
+            {/* Idea 2: Donut Chart */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '1rem', marginBottom: '1.5rem', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', padding: '1rem' }}>
+               <h3 style={{ fontSize: '1rem', color: '#fff', marginBottom: '0.5rem', width: '100%', textAlign: 'center' }}>Overall Success Rate</h3>
+               <div style={{ width: '100%', height: '180px' }}>
+                 <ResponsiveContainer width="100%" height="100%">
+                   <PieChart>
+                     <Pie
+                       data={[
+                         { name: 'Done', value: getPhaseCount('done'), color: '#8b5cf6' },
+                         { name: 'Under Review', value: getPhaseCount('parliament') + getPhaseCount('government'), color: '#f59e0b' },
+                         { name: 'Active', value: getPhaseCount('sign'), color: '#10b981' },
+                         { name: 'Other/Failed', value: (kpis?.total_initiatives || 0) - (getPhaseCount('done') + getPhaseCount('parliament') + getPhaseCount('government') + getPhaseCount('sign')), color: '#475569' }
+                       ]}
+                       cx="50%"
+                       cy="50%"
+                       innerRadius={50}
+                       outerRadius={75}
+                       paddingAngle={5}
+                       dataKey="value"
+                       stroke="none"
+                     >
+                       {[
+                         { name: 'Done', value: getPhaseCount('done'), color: '#8b5cf6' },
+                         { name: 'Under Review', value: getPhaseCount('parliament') + getPhaseCount('government'), color: '#f59e0b' },
+                         { name: 'Active', value: getPhaseCount('sign'), color: '#10b981' },
+                         { name: 'Other/Failed', value: (kpis?.total_initiatives || 0) - (getPhaseCount('done') + getPhaseCount('parliament') + getPhaseCount('government') + getPhaseCount('sign')), color: '#475569' }
+                       ].map((entry, index) => (
+                         <Cell key={`cell-${index}`} fill={entry.color} />
+                       ))}
+                     </Pie>
+                     <Tooltip 
+                       contentStyle={{ background: 'rgba(15, 23, 42, 0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
+                       itemStyle={{ color: '#fff' }}
+                       formatter={(value, name) => [`${value} init.`, name]}
+                     />
+                     <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '0.8rem' }} />
+                   </PieChart>
+                 </ResponsiveContainer>
+               </div>
+            </div>
+
+            {/* Idea 3: True Funnel */}
+            <h3 style={{ fontSize: '1rem', color: '#fff', marginBottom: '1rem' }}>True Success Funnel</h3>
+            <div className="funnel-container" style={{ alignItems: 'center', width: '100%', gap: '0.3rem' }}>
+               <div className="funnel-row" style={{ width: '100%', background: 'rgba(59, 130, 246, 0.05)', border: '1px solid #3b82f640', justifyContent: 'center', padding: '0.5rem', gap: '1rem' }}>
+                  <span style={{ color: '#3b82f6', fontSize: '0.9rem' }}>Total Created</span>
+                  <span style={{ fontSize: '1.1rem' }}>{(kpis?.total_initiatives || 0).toLocaleString()}</span>
+               </div>
+               
+               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                  ↓ {kpis?.total_initiatives ? Math.round(((kpis?.threshold_passed || 0) / kpis.total_initiatives) * 100) : 0}% passed 1000 sigs
+               </div>
+               
+               <div className="funnel-row" style={{ width: '75%', background: 'rgba(245, 158, 11, 0.05)', border: '1px solid #f59e0b40', justifyContent: 'center', padding: '0.5rem', gap: '1rem' }}>
+                  <span style={{ color: '#f59e0b', fontSize: '0.9rem' }}>Threshold Passed</span>
+                  <span style={{ fontSize: '1.1rem' }}>{(kpis?.threshold_passed || 0).toLocaleString()}</span>
+               </div>
+
+               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                  ↓ {kpis?.threshold_passed ? Math.round((getPhaseCount('done') / kpis.threshold_passed) * 100) : 0}% implemented
+               </div>
+
+               <div className="funnel-row" style={{ width: '50%', background: 'rgba(139, 92, 246, 0.05)', border: '1px solid #8b5cf640', justifyContent: 'center', padding: '0.5rem', gap: '1rem' }}>
+                  <span style={{ color: '#8b5cf6', fontSize: '0.9rem' }}>Successfully Done</span>
+                  <span style={{ fontSize: '1.1rem' }}>{getPhaseCount('done').toLocaleString()}</span>
+               </div>
+            </div>
           </div>
           
           <div className="glass-panel">
