@@ -49,9 +49,9 @@ def get_trending_initiatives(limit: int = 5):
             i.signatures_count, 
             i.url,
             (
-                SELECT list(signatures_count) 
+                SELECT list({'date': snapshot_date::VARCHAR, 'value': signatures_count}) 
                 FROM (
-                    SELECT signatures_count 
+                    SELECT snapshot_date, signatures_count 
                     FROM initiative_snapshots s 
                     WHERE s.initiative_id = i.id 
                       AND snapshot_date >= (SELECT max(snapshot_date) FROM initiative_snapshots) - interval 7 day
@@ -75,18 +75,19 @@ def get_trending_initiatives(limit: int = 5):
             # Process history array
             history = r.get('history_7d') or []
             if not history and r.get('signatures_count'):
-                history = [r['signatures_count']]
+                history = [{'date': 'Now', 'value': r['signatures_count']}]
                 
             # Guarantee history ends with the most live data
-            if history and history[-1] != r['signatures_count']:
-                history.append(r['signatures_count'])
+            if history and history[-1]['value'] != r['signatures_count']:
+                history.append({'date': 'Now', 'value': r['signatures_count']})
                 
             r['history_array'] = history
             
             # Calculate velocity
             if len(history) >= 2:
-                growth = history[-1] - history[0]
-                days = len(history) - 1
+                growth = history[-1]['value'] - history[0]['value']
+                # Count days based on dates or fallback to total history duration
+                days = (len(history) - 1)
                 velocity = round(growth / days) if days > 0 else 0
             else:
                 growth = 0

@@ -5,17 +5,21 @@ import { LineChart, Line, Tooltip, ResponsiveContainer, YAxis } from 'recharts';
 const RechartsSparkline = ({ data }) => {
   if (!data || data.length < 2) return <div style={{width: '120px', height: '40px'}}></div>;
   
-  const chartData = data.map((val, i) => ({ value: val, day: i + 1 }));
-  const min = Math.min(...data);
-  const max = Math.max(...data);
+  const chartData = data;
+  const values = data.map(d => d.value);
+  const min = Math.min(...values);
+  const max = Math.max(...values);
   const diff = max - min || 1;
   const domain = [Math.max(0, min - diff * 0.1), max + diff * 0.1];
 
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
+      const p = payload[0].payload;
+      const dateStr = p.date === 'Now' ? 'Now' : new Date(p.date).toLocaleDateString();
       return (
-        <div style={{ background: 'rgba(15, 23, 42, 0.95)', border: '1px solid rgba(59, 130, 246, 0.3)', padding: '4px 8px', borderRadius: '4px', fontSize: '0.75rem', color: '#f8fafc', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.5)' }}>
-          {payload[0].value.toLocaleString()} sig.
+        <div style={{ background: 'rgba(15, 23, 42, 0.95)', border: '1px solid rgba(59, 130, 246, 0.3)', padding: '6px 10px', borderRadius: '4px', fontSize: '0.8rem', color: '#f8fafc', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.5)' }}>
+          <div style={{ color: 'var(--text-muted)', marginBottom: '3px', fontSize: '0.7rem', textTransform: 'uppercase' }}>{dateStr}</div>
+          <div><strong>{p.value.toLocaleString()}</strong> sig.</div>
         </div>
       );
     }
@@ -261,8 +265,8 @@ function App() {
                     <div style={{marginRight: '1.2rem', color: 'var(--text-muted)', fontWeight: 600, fontSize: '1.2rem', minWidth: '20px'}}>
                       {idx + 1}
                     </div>
-                    <div className="item-info">
-                      <h4 style={{fontSize: '1.1rem'}}>{item.title}</h4>
+                    <div className="item-info" style={{ flex: 1, minWidth: 0 }}>
+                      <h4 style={{fontSize: '1.1rem', maxWidth: '100%', whiteSpace: 'normal', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'}}>{item.title}</h4>
                       <span style={{color: '#fff', fontWeight: 500, fontSize: '0.95rem'}}>{item.signatures_count.toLocaleString()}</span> {activeT.signatures}
                       <span className="badge badge-sign" style={{marginLeft: '0.8rem', fontSize: '0.7rem', padding: '0.15rem 0.5rem'}}>{activeT.phase_sign}</span>
                       {item.velocity >= 0 && (
@@ -272,7 +276,10 @@ function App() {
                       )}
                     </div>
                   </a>
-                  <div style={{display:'flex', alignItems:'center', marginLeft: '1rem'}}>
+                  <div style={{ color: 'var(--text-muted)', opacity: 0.5, margin: '0 1rem' }}>
+                    <ChevronRight size={20} />
+                  </div>
+                  <div style={{display:'flex', alignItems:'center'}}>
                     <RechartsSparkline data={item.history_array} />
                   </div>
                 </div>
@@ -284,42 +291,44 @@ function App() {
         {/* BLOCK 3: PROCESS */}
         <div className="dashboard-grid" style={{gridTemplateColumns: '1fr 1fr'}}>
           
-          <div className="glass-panel">
-            <h2 className="section-title"><Filter size={20} color="#8b5cf6"/> {activeT.funnel_title}</h2>
-            <div className="funnel-container" style={{ alignItems: 'center', width: '100%' }}>
-              {funnelData.map((step, idx) => {
-                const width = Math.max(30, (step.count / maxFunnel) * 100);
-                
-                let conversion = null;
-                if (idx > 0) {
-                  const prevStep = funnelData[idx - 1];
-                  const percent = prevStep.count > 0 ? Math.round((step.count / prevStep.count) * 100) : 0;
-                  conversion = (
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0.3rem 0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '4px'}}><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
-                       {percent}% {lang === 'en' ? 'passed' : 'edasi'}
-                    </div>
-                  );
-                }
-
-                return (
-                  <div key={step.id} style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    {conversion}
-                    <div className="funnel-row" style={{ 
-                      width: `${width}%`, 
-                      background: `rgba(255, 255, 255, 0.03)`, 
-                      border: `1px solid ${step.color}40`,
-                      boxShadow: `inset 0 0 10px ${step.color}15`,
-                      justifyContent: 'center', 
-                      gap: '1.5rem' 
-                    }}>
-                      <span style={{ color: step.color, fontSize: '0.95rem' }}>{step.label}</span>
-                      <span style={{ fontSize: '1.25rem' }}>{step.count.toLocaleString()}</span>
-                    </div>
-                  </div>
-                );
-              })}
+          <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column' }}>
+            <h2 className="section-title"><Activity size={20} color="#8b5cf6"/> Fate of Initiatives</h2>
+            
+            {/* Idea 1: Cards */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '2rem' }}>
+              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>Active Gathering</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 600, color: '#10b981' }}>{getPhaseCount('sign').toLocaleString()}</div>
+              </div>
+              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>Under Review</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 600, color: '#f59e0b' }}>{(getPhaseCount('parliament') + getPhaseCount('government')).toLocaleString()}</div>
+              </div>
+              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>Successfully Done</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 600, color: '#8b5cf6' }}>{getPhaseCount('done').toLocaleString()}</div>
+              </div>
+              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>Total Initiatives</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 600, color: '#3b82f6' }}>{kpis?.total_initiatives?.toLocaleString() || 0}</div>
+              </div>
             </div>
+
+            {/* Idea 2: Stacked Bar */}
+            <h3 style={{ fontSize: '1rem', color: '#fff', marginBottom: '1rem' }}>Overall Success Rate</h3>
+            {kpis?.total_initiatives > 0 && (
+              <div style={{ width: '100%' }}>
+                <div style={{ display: 'flex', height: '16px', borderRadius: '999px', overflow: 'hidden', background: 'var(--panel-border)', marginBottom: '0.5rem' }}>
+                  <div style={{ width: `${(getPhaseCount('done') / kpis.total_initiatives) * 100}%`, background: '#8b5cf6' }} title="Done" />
+                  <div style={{ width: `${((getPhaseCount('parliament') + getPhaseCount('government')) / kpis.total_initiatives) * 100}%`, background: '#f59e0b' }} title="Under Review" />
+                  <div style={{ width: `${(getPhaseCount('sign') / kpis.total_initiatives) * 100}%`, background: '#10b981' }} title="Active" />
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                  <span>{Math.round((getPhaseCount('done') / kpis.total_initiatives) * 100)}% Reached Final Resolution</span>
+                  <span>{Math.round((getPhaseCount('sign') / kpis.total_initiatives) * 100)}% Currently Active</span>
+                </div>
+              </div>
+            )}
           </div>
           
           <div className="glass-panel">

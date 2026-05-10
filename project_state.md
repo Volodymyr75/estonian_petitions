@@ -73,8 +73,9 @@ The immediate next step is building out the Process metrics.
     - **Follow-up Fix:** Re-styled the "Last Updated" text using CSS margins to resolve UI overlapping with the sub-title.
     - **Follow-up Fix:** Realized Rahvaalgatus API natively omits `created_at` for initiatives. Appended an ETL post-processing SQL routine to auto-deduce `created_at` from the oldest timestamp in `initiative_events` to fix the "new initiatives" counter.
     - **Follow-up Fix:** Changed "Trending Initiatives" SQL + Python logic to sort strictly by `velocity` (growth per day) rather than lifetime total signatures, accurately surfacing the *currently* most active petitions.
-    - **Follow-up Feature:** Replaced custom static SVG sparklines with `recharts` for interactive hover tooltips (showing precise daily vote counts).
-    - **Follow-up Feature:** Redesigned the "Phase Funnel" into a True Funnel centered layout with step-by-step percentage conversion indicators.
+    - **Follow-up Feature:** Replaced custom static SVG sparklines with `recharts` for interactive hover tooltips (showing precise daily vote counts and snapshot dates).
+    - **Follow-up Feature:** Improved Trending Initiatives layout by allocating more text width and separating the clickable title zone from the interactive chart using a chevron indicator.
+    - **Follow-up Feature:** Completely replaced the sequential "Phase Funnel" with a "Fate of Initiatives" dashboard block. Uses a 4-card grid (Active, Under Review, Done, Total) and a horizontal Donut/Stacked Bar to accurately visualize the cross-sectional success rate without falsely implying sequential conversion.
 
 ## 5. Next Steps
 - **Dashboard Expansion (Phase 2):** Fully build out the Process metrics block (lifecycle timelines, event funnels).
