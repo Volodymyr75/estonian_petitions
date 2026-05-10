@@ -325,7 +325,7 @@ function App() {
             {/* Idea 2: Donut Chart */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '1rem', marginBottom: '1.5rem', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', padding: '1rem' }}>
                <h3 style={{ fontSize: '1rem', color: '#fff', marginBottom: '0.5rem', width: '100%', textAlign: 'center' }}>Overall Success Rate</h3>
-               <div style={{ width: '100%', height: '180px' }}>
+               <div style={{ width: '100%', height: '220px' }}>
                  <ResponsiveContainer width="100%" height="100%">
                    <PieChart>
                      <Pie
@@ -336,9 +336,9 @@ function App() {
                          { name: 'Other/Failed', value: (kpis?.total_initiatives || 0) - (getPhaseCount('done') + getPhaseCount('parliament') + getPhaseCount('government') + getPhaseCount('sign')), color: '#475569' }
                        ]}
                        cx="50%"
-                       cy="50%"
-                       innerRadius={50}
-                       outerRadius={75}
+                       cy="45%"
+                       innerRadius={45}
+                       outerRadius={65}
                        paddingAngle={5}
                        dataKey="value"
                        stroke="none"
@@ -357,7 +357,7 @@ function App() {
                        itemStyle={{ color: '#fff' }}
                        formatter={(value, name) => [`${value} init.`, name]}
                      />
-                     <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '0.8rem' }} />
+                     <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '0.75rem', paddingTop: '10px' }} />
                    </PieChart>
                  </ResponsiveContainer>
                </div>
