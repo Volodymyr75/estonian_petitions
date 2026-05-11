@@ -82,6 +82,9 @@ The immediate next step is building out the Process metrics.
       - Updated `daily_sync.yml` GitHub Action to automatically generate and commit these JSONs daily.
       - Modified React frontend to fetch `/api_data/*.json` directly via Vercel CDN, eliminating serverless runtime, reducing load times to milliseconds, and permanently bypassing MotherDuck rate limits.
       - **Post-Rollout Fixes:** Restored `phases.json` generation to correctly power the Donut Chart and Funnel. Fixed Python numpy array parsing for `history_array` to ensure historical sparklines render correctly from MotherDuck. Handled React edge-cases for Recharts sparklines when historical data length is exactly 1.
+    - **Follow-up Feature (Call to Action):** Added a new "Needs Your Voice (Approaching Deadline)" block directly beneath Trending Initiatives. This queries active (`sign`) petitions with <1000 signatures, sorted by closest deadline. Visually styled identically to Trending but replaces velocity green badges with urgent orange/red badges ("⏳ X days left", "⚠️ X needed") to create a sharp contrast between rapidly growing petitions and those struggling to meet the threshold.
+
+> ⚠️ **CRITICAL DEVELOPMENT WORKFLOW NOTE:** Because the GitHub Action (`daily_sync.yml`) now automatically commits static JSON updates directly to the `main` branch every morning, **you must run `git pull --rebase` before beginning any new coding session.** Failure to do so will result in push rejections and merge conflicts on the `/public/api_data/` files.
 
 ## 5. Next Steps
 - **Dashboard Expansion (Phase 2):** Fully build out the Process metrics block (lifecycle timelines, event funnels).
