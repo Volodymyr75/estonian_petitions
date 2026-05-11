@@ -283,10 +283,10 @@ function App() {
                         </span>
                       )}
                     </div>
+                    <div style={{ color: 'var(--text-muted)', opacity: 0.5, margin: '0 1rem', display: 'flex', alignItems: 'center' }}>
+                      <ChevronRight size={20} />
+                    </div>
                   </a>
-                  <div style={{ color: 'var(--text-muted)', opacity: 0.5, margin: '0 1rem' }}>
-                    <ChevronRight size={20} />
-                  </div>
                   <div style={{display:'flex', alignItems:'center'}}>
                     <RechartsSparkline data={item.history_array} />
                   </div>
