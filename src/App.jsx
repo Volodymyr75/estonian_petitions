@@ -254,8 +254,8 @@ function App() {
               {summary?.latest_event && (
                 <div style={{marginTop: '1rem'}}>
                   <p style={{color: '#60a5fa', fontSize:'0.85rem', marginBottom: '0.2rem'}}>{activeT.latest_activity.toUpperCase()}</p>
-                  <p><strong>{summary.latest_event.title}</strong></p>
-                  <p style={{fontSize:'0.85rem', marginTop: '0.3rem'}}>{summary.latest_event.actor} {activeT.on} {new Date(summary.latest_event.date).toLocaleDateString()}</p>
+                  <p><strong>{summary?.latest_event?.title}</strong></p>
+                  <p style={{fontSize:'0.85rem', marginTop: '0.3rem'}}>{summary?.latest_event?.actor} {activeT.on} {new Date(summary?.latest_event?.date).toLocaleDateString()}</p>
                 </div>
               )}
             </div>

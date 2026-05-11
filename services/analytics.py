@@ -10,10 +10,10 @@ DB_PATH = os.environ.get("DB_PATH", os.path.join(os.path.dirname(os.path.dirname
 
 def get_db_connection():
     # Vercel serverless functions need a writable home directory (/tmp)
-    config = {'home_directory': '/tmp'}
-    if DB_PATH.startswith("md:"):
-        return duckdb.connect(DB_PATH, config=config)
-    return duckdb.connect(DB_PATH, read_only=True, config=config)
+    if not DB_PATH.startswith('md:'):
+        config = {'home_directory': '/tmp'}
+        return duckdb.connect(DB_PATH, read_only=True, config=config)
+    return duckdb.connect(DB_PATH, read_only=True)
 
 def get_overview_kpis():
     """Retrieve high-level KPIs."""
