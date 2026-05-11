@@ -95,7 +95,22 @@ function App() {
       idle_days: "days idle",
       deadline_title: "Needs Your Voice (Approaching Deadline)",
       days_left: "days left",
-      needed: "needed"
+      needed: "needed",
+      fate_title: "Fate of Initiatives",
+      active_gathering: "Active Gathering",
+      under_review: "Under Review",
+      successfully_done: "Successfully Done",
+      overall_success: "Overall Success Rate",
+      true_success: "True Success Funnel",
+      total_created: "Total Created",
+      passed_1000: "passed 1000 sigs",
+      threshold_passed: "Threshold Passed",
+      implemented: "implemented",
+      about_title: "About this Project",
+      about_desc: "Built to provide transparency and actionable insights into Estonian civic engagement.",
+      tech_stack: "Tech Stack",
+      github_repo: "GitHub Repository",
+      contact: "Contact"
     },
     et: {
       title: "Eesti Rahvaalgatused",
@@ -129,7 +144,22 @@ function App() {
       idle_days: "päeva ootel",
       deadline_title: "Vajab Sinu Häält (Tähtaeg Läheneb)",
       days_left: "päeva jäänud",
-      needed: "puudu"
+      needed: "puudu",
+      fate_title: "Algatuste Saatus",
+      active_gathering: "Aktiivne Kogumine",
+      under_review: "Ülevaatamisel",
+      successfully_done: "Edukalt Tehtud",
+      overall_success: "Üldine Edukuse Määr",
+      true_success: "Tõeline Edu Lehter",
+      total_created: "Kokku Loodud",
+      passed_1000: "ületanud 1000 allkirja",
+      threshold_passed: "Künnis Ületatud",
+      implemented: "rakendatud",
+      about_title: "Projektist",
+      about_desc: "Loodud selleks, et tagada läbipaistvus ja praktiline ülevaade Eesti kodanike kaasatusest.",
+      tech_stack: "Tehnoloogiad",
+      github_repo: "GitHubi Hoidla",
+      contact: "Kontakt"
     }
   };
 
@@ -347,40 +377,40 @@ function App() {
         <div className="dashboard-grid" style={{gridTemplateColumns: '1fr 1fr'}}>
           
           <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column' }}>
-            <h2 className="section-title"><Activity size={20} color="#8b5cf6"/> Fate of Initiatives</h2>
+            <h2 className="section-title"><Activity size={20} color="#8b5cf6"/> {activeT.fate_title}</h2>
             
             {/* Idea 1: Cards */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
               <div style={{ background: 'rgba(255,255,255,0.03)', padding: '0.8rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>Active Gathering</div>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>{activeT.active_gathering}</div>
                 <div style={{ fontSize: '1.3rem', fontWeight: 600, color: '#10b981' }}>{getPhaseCount('sign').toLocaleString()}</div>
               </div>
               <div style={{ background: 'rgba(255,255,255,0.03)', padding: '0.8rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>Under Review</div>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>{activeT.under_review}</div>
                 <div style={{ fontSize: '1.3rem', fontWeight: 600, color: '#f59e0b' }}>{(getPhaseCount('parliament') + getPhaseCount('government')).toLocaleString()}</div>
               </div>
               <div style={{ background: 'rgba(255,255,255,0.03)', padding: '0.8rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>Successfully Done</div>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>{activeT.successfully_done}</div>
                 <div style={{ fontSize: '1.3rem', fontWeight: 600, color: '#8b5cf6' }}>{getPhaseCount('done').toLocaleString()}</div>
               </div>
               <div style={{ background: 'rgba(255,255,255,0.03)', padding: '0.8rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>Total Initiatives</div>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>{activeT.total_initiatives}</div>
                 <div style={{ fontSize: '1.3rem', fontWeight: 600, color: '#3b82f6' }}>{kpis?.total_initiatives?.toLocaleString() || 0}</div>
               </div>
             </div>
 
             {/* Idea 2: Donut Chart */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '1rem', marginBottom: '1.5rem', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', padding: '1rem' }}>
-               <h3 style={{ fontSize: '1rem', color: '#fff', marginBottom: '0.5rem', width: '100%', textAlign: 'center' }}>Overall Success Rate</h3>
+               <h3 style={{ fontSize: '1rem', color: '#fff', marginBottom: '0.5rem', width: '100%', textAlign: 'center' }}>{activeT.overall_success}</h3>
                <div style={{ width: '100%', height: '220px' }}>
                  <ResponsiveContainer width="100%" height="100%">
                    <PieChart>
                      <Pie
                        data={[
-                         { name: 'Done', value: getPhaseCount('done'), color: '#8b5cf6' },
-                         { name: 'Under Review', value: getPhaseCount('parliament') + getPhaseCount('government'), color: '#f59e0b' },
-                         { name: 'Active', value: getPhaseCount('sign'), color: '#10b981' },
-                         { name: 'Other/Failed', value: (kpis?.total_initiatives || 0) - (getPhaseCount('done') + getPhaseCount('parliament') + getPhaseCount('government') + getPhaseCount('sign')), color: '#475569' }
+                         { name: activeT.phase_done, value: getPhaseCount('done'), color: '#8b5cf6' },
+                         { name: activeT.under_review, value: getPhaseCount('parliament') + getPhaseCount('government'), color: '#f59e0b' },
+                         { name: activeT.active_gathering, value: getPhaseCount('sign'), color: '#10b981' },
+                         { name: `${activeT.phase_other}`, value: (kpis?.total_initiatives || 0) - (getPhaseCount('done') + getPhaseCount('parliament') + getPhaseCount('government') + getPhaseCount('sign')), color: '#475569' }
                        ]}
                        cx="50%"
                        cy="45%"
@@ -391,10 +421,10 @@ function App() {
                        stroke="none"
                      >
                        {[
-                         { name: 'Done', value: getPhaseCount('done'), color: '#8b5cf6' },
-                         { name: 'Under Review', value: getPhaseCount('parliament') + getPhaseCount('government'), color: '#f59e0b' },
-                         { name: 'Active', value: getPhaseCount('sign'), color: '#10b981' },
-                         { name: 'Other/Failed', value: (kpis?.total_initiatives || 0) - (getPhaseCount('done') + getPhaseCount('parliament') + getPhaseCount('government') + getPhaseCount('sign')), color: '#475569' }
+                         { name: activeT.phase_done, value: getPhaseCount('done'), color: '#8b5cf6' },
+                         { name: activeT.under_review, value: getPhaseCount('parliament') + getPhaseCount('government'), color: '#f59e0b' },
+                         { name: activeT.active_gathering, value: getPhaseCount('sign'), color: '#10b981' },
+                         { name: `${activeT.phase_other}`, value: (kpis?.total_initiatives || 0) - (getPhaseCount('done') + getPhaseCount('parliament') + getPhaseCount('government') + getPhaseCount('sign')), color: '#475569' }
                        ].map((entry, index) => (
                          <Cell key={`cell-${index}`} fill={entry.color} />
                        ))}
@@ -402,7 +432,7 @@ function App() {
                      <Tooltip 
                        contentStyle={{ background: 'rgba(15, 23, 42, 0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
                        itemStyle={{ color: '#fff' }}
-                       formatter={(value, name) => [`${value} init.`, name]}
+                       formatter={(value, name) => [`${value}`, name]}
                      />
                      <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '0.75rem', paddingTop: '10px' }} />
                    </PieChart>
@@ -411,28 +441,28 @@ function App() {
             </div>
 
             {/* Idea 3: True Funnel */}
-            <h3 style={{ fontSize: '1rem', color: '#fff', marginBottom: '1rem', width: '100%', textAlign: 'center' }}>True Success Funnel</h3>
+            <h3 style={{ fontSize: '1rem', color: '#fff', marginBottom: '1rem', width: '100%', textAlign: 'center' }}>{activeT.true_success}</h3>
             <div className="funnel-container" style={{ alignItems: 'center', width: '100%', gap: '0.3rem' }}>
                <div className="funnel-row" style={{ width: '100%', background: 'rgba(59, 130, 246, 0.05)', border: '1px solid #3b82f640', justifyContent: 'center', padding: '0.5rem', gap: '1rem' }}>
-                  <span style={{ color: '#3b82f6', fontSize: '0.9rem' }}>Total Created</span>
+                  <span style={{ color: '#3b82f6', fontSize: '0.9rem' }}>{activeT.total_created}</span>
                   <span style={{ fontSize: '1.1rem' }}>{(kpis?.total_initiatives || 0).toLocaleString()}</span>
                </div>
                
                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                  ↓ {kpis?.total_initiatives ? Math.round(((kpis?.threshold_passed || 0) / kpis.total_initiatives) * 100) : 0}% passed 1000 sigs
+                  ↓ {kpis?.total_initiatives ? Math.round(((kpis?.threshold_passed || 0) / kpis.total_initiatives) * 100) : 0}% {activeT.passed_1000}
                </div>
                
                <div className="funnel-row" style={{ width: '75%', background: 'rgba(245, 158, 11, 0.05)', border: '1px solid #f59e0b40', justifyContent: 'center', padding: '0.5rem', gap: '1rem' }}>
-                  <span style={{ color: '#f59e0b', fontSize: '0.9rem' }}>Threshold Passed</span>
+                  <span style={{ color: '#f59e0b', fontSize: '0.9rem' }}>{activeT.threshold_passed}</span>
                   <span style={{ fontSize: '1.1rem' }}>{(kpis?.threshold_passed || 0).toLocaleString()}</span>
                </div>
 
                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                  ↓ {kpis?.threshold_passed ? Math.round((getPhaseCount('done') / kpis.threshold_passed) * 100) : 0}% implemented
+                  ↓ {kpis?.threshold_passed ? Math.round((getPhaseCount('done') / kpis.threshold_passed) * 100) : 0}% {activeT.implemented}
                </div>
 
                <div className="funnel-row" style={{ width: '50%', background: 'rgba(139, 92, 246, 0.05)', border: '1px solid #8b5cf640', justifyContent: 'center', padding: '0.5rem', gap: '1rem' }}>
-                  <span style={{ color: '#8b5cf6', fontSize: '0.9rem' }}>Successfully Done</span>
+                  <span style={{ color: '#8b5cf6', fontSize: '0.9rem' }}>{activeT.successfully_done}</span>
                   <span style={{ fontSize: '1.1rem' }}>{getPhaseCount('done').toLocaleString()}</span>
                </div>
             </div>
@@ -459,6 +489,29 @@ function App() {
             </div>
           </div>
 
+        </div>
+
+        {/* BLOCK 4: FOOTER / ABOUT */}
+        <div className="dashboard-grid" style={{gridTemplateColumns: '1fr', marginTop: '1rem', marginBottom: '2rem'}}>
+          <div className="glass-panel" style={{textAlign: 'center', opacity: 0.85, padding: '2.5rem 1rem'}}>
+            <h3 style={{color: '#fff', marginBottom: '0.8rem', fontSize: '1.3rem'}}>{activeT.about_title}</h3>
+            <p style={{color: 'var(--text-muted)', marginBottom: '2rem', maxWidth: '600px', margin: '0 auto 2rem auto', lineHeight: '1.6'}}>{activeT.about_desc}</p>
+            
+            <div style={{display: 'flex', justifyContent: 'center', gap: '2.5rem', flexWrap: 'wrap', color: 'var(--text-muted)', fontSize: '0.95rem'}}>
+              <div>
+                <strong style={{color: '#fff', display: 'block', marginBottom: '0.3rem'}}>{activeT.tech_stack}</strong>
+                React, Recharts, DuckDB, Python, Actions, Vercel
+              </div>
+              <div>
+                <strong style={{color: '#fff', display: 'block', marginBottom: '0.3rem'}}>{activeT.github_repo}</strong>
+                <a href="https://github.com/Volodymyr75/estonian_petitions" target="_blank" rel="noopener noreferrer" style={{color: '#3b82f6', textDecoration: 'none'}}>Volodymyr75/estonian_petitions</a>
+              </div>
+              <div>
+                <strong style={{color: '#fff', display: 'block', marginBottom: '0.3rem'}}>{activeT.contact}</strong>
+                <a href="mailto:strembov@gmail.com" style={{color: '#3b82f6', textDecoration: 'none'}}>strembov@gmail.com</a>
+              </div>
+            </div>
+          </div>
         </div>
 
       </main>
