@@ -125,23 +125,20 @@ function App() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const [kpiRes, trendRes, phaseRes, sumRes, stalledRes] = await Promise.all([
-          fetch('/api/kpis'),
-          fetch('/api/trending?limit=5'),
-          fetch('/api/phases'),
-          fetch('/api/summary'),
-          fetch('/api/stalled')
+        const [kpiRes, trendRes, sumRes, stalledRes] = await Promise.all([
+          fetch('/api_data/kpis.json'),
+          fetch('/api_data/trending.json'),
+          fetch('/api_data/summary.json'),
+          fetch('/api_data/stalled.json')
         ]);
         
         const kpiData = await kpiRes.json();
         const trendData = await trendRes.json();
-        const phaseData = await phaseRes.json();
         const sumData = await sumRes.json();
         const stalledData = await stalledRes.json();
         
         setKpis(kpiData);
         setTrending(trendData);
-        setPhases(phaseData);
         setSummary(sumData);
         setStalled(stalledData);
       } catch (err) {
