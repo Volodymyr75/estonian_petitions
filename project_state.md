@@ -81,6 +81,7 @@ The immediate next step is building out the Process metrics.
       - Created `generate_api_json.py` to pre-calculate all analytics into static `.json` files.
       - Updated `daily_sync.yml` GitHub Action to automatically generate and commit these JSONs daily.
       - Modified React frontend to fetch `/api_data/*.json` directly via Vercel CDN, eliminating serverless runtime, reducing load times to milliseconds, and permanently bypassing MotherDuck rate limits.
+      - **Post-Rollout Fixes:** Restored `phases.json` generation to correctly power the Donut Chart and Funnel. Fixed Python numpy array parsing for `history_array` to ensure historical sparklines render correctly from MotherDuck. Handled React edge-cases for Recharts sparklines when historical data length is exactly 1.
 
 ## 5. Next Steps
 - **Dashboard Expansion (Phase 2):** Fully build out the Process metrics block (lifecycle timelines, event funnels).
