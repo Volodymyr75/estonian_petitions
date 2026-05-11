@@ -58,6 +58,7 @@ function App() {
   const [phases, setPhases] = useState([]);
   const [summary, setSummary] = useState(null);
   const [stalled, setStalled] = useState([]);
+  const [deadline, setDeadline] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Simple translations for MVP
@@ -91,7 +92,10 @@ function App() {
       process: "Process & Funnel",
       funnel_title: "Phase Funnel",
       stalled_title: "Stalled Initiatives",
-      idle_days: "days idle"
+      idle_days: "days idle",
+      deadline_title: "Needs Your Voice (Approaching Deadline)",
+      days_left: "days left",
+      needed: "needed"
     },
     et: {
       title: "Eesti Rahvaalgatused",
@@ -122,19 +126,23 @@ function App() {
       process: "Protsess ja Lehter",
       funnel_title: "Faaside Lehter",
       stalled_title: "Seisvad Algatused",
-      idle_days: "päeva ootel"
+      idle_days: "päeva ootel",
+      deadline_title: "Vajab Sinu Häält (Tähtaeg Läheneb)",
+      days_left: "päeva jäänud",
+      needed: "puudu"
     }
   };
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [kpiRes, trendRes, phaseRes, sumRes, stalledRes] = await Promise.all([
+        const [kpiRes, trendRes, phaseRes, sumRes, stalledRes, deadlineRes] = await Promise.all([
           fetch('/api_data/kpis.json'),
           fetch('/api_data/trending.json'),
           fetch('/api_data/phases.json'),
           fetch('/api_data/summary.json'),
-          fetch('/api_data/stalled.json')
+          fetch('/api_data/stalled.json'),
+          fetch('/api_data/deadline.json')
         ]);
         
         const kpiData = await kpiRes.json();
@@ -142,12 +150,14 @@ function App() {
         const phaseData = await phaseRes.json();
         const sumData = await sumRes.json();
         const stalledData = await stalledRes.json();
+        const deadlineData = await deadlineRes.json();
         
         setKpis(kpiData);
         setTrending(trendData);
         setPhases(phaseData);
         setSummary(sumData);
         setStalled(stalledData);
+        setDeadline(deadlineData);
       } catch (err) {
         console.error("Error fetching data:", err);
       } finally {
@@ -286,6 +296,39 @@ function App() {
                           +{item.velocity} {activeT.velocity}
                         </span>
                       )}
+                    </div>
+                    <div style={{ color: 'var(--text-muted)', opacity: 0.5, margin: '0 1rem', display: 'flex', alignItems: 'center' }}>
+                      <ChevronRight size={20} />
+                    </div>
+                  </a>
+                  <div style={{display:'flex', alignItems:'center'}}>
+                    <RechartsSparkline data={item.history_array} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="glass-panel">
+            <h2 className="section-title" style={{color: '#ef4444'}}><Activity size={20} color="#ef4444"/> {activeT.deadline_title}</h2>
+            <div>
+              {deadline.map((item, idx) => (
+                <div className="list-item" key={item.id} style={{display:'flex', alignItems: 'center'}}>
+                  <a href={item.url} target="_blank" rel="noopener noreferrer" className="trending-link" style={{display:'flex', flex: 1, textDecoration:'none', color:'inherit', alignItems: 'center'}}>
+                    <div style={{marginRight: '1.2rem', color: 'var(--text-muted)', fontWeight: 600, fontSize: '1.2rem', minWidth: '20px'}}>
+                      {idx + 1}
+                    </div>
+                    <div className="item-info" style={{ flex: 1, minWidth: 0 }}>
+                      <h4 style={{fontSize: '1.1rem', maxWidth: '100%', whiteSpace: 'normal', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'}}>{item.title}</h4>
+                      <span style={{color: '#fff', fontWeight: 500, fontSize: '0.95rem'}}>{item.signatures_count.toLocaleString()}</span> {activeT.signatures}
+                      
+                      <span style={{marginLeft: '0.8rem', color: '#f97316', fontSize: '0.85rem', fontWeight: 500, background: 'rgba(249, 115, 22, 0.1)', padding:'0.2rem 0.6rem', borderRadius:'999px'}}>
+                        ⏳ {item.days_left} {activeT.days_left}
+                      </span>
+                      
+                      <span style={{marginLeft: '0.8rem', color: '#ef4444', fontSize: '0.85rem', fontWeight: 500, background: 'rgba(239, 68, 68, 0.1)', padding:'0.2rem 0.6rem', borderRadius:'999px'}}>
+                        ⚠️ {item.missing_sigs.toLocaleString()} {activeT.needed}
+                      </span>
                     </div>
                     <div style={{ color: 'var(--text-muted)', opacity: 0.5, margin: '0 1rem', display: 'flex', alignItems: 'center' }}>
                       <ChevronRight size={20} />

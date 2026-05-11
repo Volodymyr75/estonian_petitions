@@ -9,7 +9,8 @@ from services.analytics import (
     get_trending_initiatives,
     get_recent_summary,
     get_stalled_initiatives,
-    get_phase_distribution
+    get_phase_distribution,
+    get_approaching_deadline_initiatives
 )
 
 class NumpyEncoder(json.JSONEncoder):
@@ -64,6 +65,15 @@ def generate_static_json():
         print("✅ stalled.json generated")
     except Exception as e:
         print(f"❌ Error generating stalled: {e}")
+        
+    # 5. Deadline
+    try:
+        deadline = get_approaching_deadline_initiatives(limit=5)
+        with open(output_dir / "deadline.json", "w", encoding="utf-8") as f:
+            json.dump(deadline, f, ensure_ascii=False, cls=NumpyEncoder)
+        print("✅ deadline.json generated")
+    except Exception as e:
+        print(f"❌ Error generating deadline: {e}")
         
     # 5. Phases
     try:

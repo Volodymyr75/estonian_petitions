@@ -9,10 +9,6 @@ import duckdb
 DB_PATH = os.environ.get("DB_PATH", os.path.join(os.path.dirname(os.path.dirname(__file__)), 'petitions.duckdb'))
 
 def get_db_connection():
-    # Vercel serverless functions need a writable home directory (/tmp)
-    if not DB_PATH.startswith('md:'):
-        config = {'home_directory': '/tmp'}
-        return duckdb.connect(DB_PATH, read_only=True, config=config)
     return duckdb.connect(DB_PATH, read_only=True)
 
 def get_overview_kpis():
@@ -74,12 +70,22 @@ def get_trending_initiatives(limit: int = 5):
                 r['url'] = f"https://rahvaalgatus.ee/initiatives/{r['id']}"
             
             # Process history array
-            history = r.get('history_7d') or []
-            if not history and r.get('signatures_count'):
+            history = r.get('history_7d')
+            import numpy as np
+            if isinstance(history, np.ndarray):
+                history = history.tolist()
+            if history is None:
+                history = []
+            
+            # Ensure history is a normal list of dicts
+            if len(history) > 0 and isinstance(history[0], str):
+                pass # just in case, but duckdb usually returns dicts here
+                
+            if len(history) == 0 and r.get('signatures_count'):
                 history = [{'date': 'Now', 'value': r['signatures_count']}]
                 
             # Guarantee history ends with the most live data
-            if history and history[-1]['value'] != r['signatures_count']:
+            if len(history) > 0 and history[-1].get('value') != r['signatures_count']:
                 history.append({'date': 'Now', 'value': r['signatures_count']})
                 
             r['history_array'] = history
@@ -102,6 +108,75 @@ def get_trending_initiatives(limit: int = 5):
         records.sort(key=lambda x: (x.get('velocity', 0), x.get('signatures_count', 0)), reverse=True)
         
         return records[:limit]
+    finally:
+        con.close()
+
+def get_approaching_deadline_initiatives(limit: int = 5):
+    """Retrieve initiatives in sign phase that are approaching deadline."""
+    con = get_db_connection()
+    try:
+        query = """
+        SELECT 
+            i.id, 
+            i.title, 
+            i.phase, 
+            i.signatures_count, 
+            i.url,
+            i.deadline_at,
+            DATE_DIFF('day', CURRENT_DATE(), CAST(i.deadline_at AS DATE)) as days_left,
+            (
+                SELECT list({'date': snapshot_date::VARCHAR, 'value': signatures_count}) 
+                FROM (
+                    SELECT snapshot_date, signatures_count 
+                    FROM initiative_snapshots s 
+                    WHERE s.initiative_id = i.id 
+                      AND snapshot_date >= (SELECT max(snapshot_date) FROM initiative_snapshots) - interval 7 day
+                    ORDER BY snapshot_date ASC
+                )
+            ) as history_7d
+        FROM initiatives i
+        WHERE i.phase = 'sign' AND i.signatures_count < 1000 AND i.deadline_at IS NOT NULL
+          AND DATE_DIFF('day', CURRENT_DATE(), CAST(i.deadline_at AS DATE)) >= 0
+        ORDER BY days_left ASC
+        LIMIT ?
+        """
+        res = con.execute(query, [limit])
+        try:
+            records = res.df().to_dict(orient='records')
+        except Exception:
+            columns = [col[0] for col in res.description]
+            records = [dict(zip(columns, row)) for row in res.fetchall()]
+            
+        for r in records:
+            if not r.get('url'):
+                r['url'] = f"https://rahvaalgatus.ee/initiatives/{r['id']}"
+            
+            # Convert timestamp to string if needed
+            if hasattr(r.get('deadline_at'), 'isoformat'):
+                r['deadline_at'] = r['deadline_at'].isoformat()
+                
+            # Process history array
+            history = r.get('history_7d')
+            import numpy as np
+            if isinstance(history, np.ndarray):
+                history = history.tolist()
+            if history is None:
+                history = []
+            
+            if len(history) == 0 and r.get('signatures_count'):
+                history = [{'date': 'Now', 'value': r['signatures_count']}]
+                
+            if len(history) > 0 and history[-1].get('value') != r['signatures_count']:
+                history.append({'date': 'Now', 'value': r['signatures_count']})
+                
+            r['history_array'] = history
+            
+            # missing signatures
+            r['missing_sigs'] = max(0, 1000 - r.get('signatures_count', 0))
+            
+            r.pop('history_7d', None)
+        
+        return records
     finally:
         con.close()
 
