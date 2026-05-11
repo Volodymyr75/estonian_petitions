@@ -77,6 +77,10 @@ The immediate next step is building out the Process metrics.
     - **Follow-up Feature:** Improved Trending Initiatives layout by allocating more text width and separating the clickable title zone from the interactive chart using a chevron indicator. Added a smooth UI hover effect for better discoverability.
     - **Follow-up Feature:** Fixed Recharts tooltip overlap by pinning it cleanly above the sparkline graphs.
     - **Follow-up Feature:** Completely replaced the sequential "Phase Funnel" with a "Fate of Initiatives" dashboard block. Uses a 4-card grid (Active, Under Review, Done, Total), a horizontal Donut Chart for overall success rate, and a "True Success Funnel" to accurately visualize the cross-sectional success rate without falsely implying sequential conversion.
+    - **Architecture Overhaul (Static JSON API):** Hit MotherDuck daily compute limits due to intensive development queries, causing Vercel serverless timeouts ("Loading Civic Data..."). Implemented a Static Site Generation (SSG) approach:
+      - Created `generate_api_json.py` to pre-calculate all analytics into static `.json` files.
+      - Updated `daily_sync.yml` GitHub Action to automatically generate and commit these JSONs daily.
+      - Modified React frontend to fetch `/api_data/*.json` directly via Vercel CDN, eliminating serverless runtime, reducing load times to milliseconds, and permanently bypassing MotherDuck rate limits.
 
 ## 5. Next Steps
 - **Dashboard Expansion (Phase 2):** Fully build out the Process metrics block (lifecycle timelines, event funnels).
