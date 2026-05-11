@@ -3,10 +3,14 @@ import { Activity, Users, FileText, Zap, ChevronRight, BarChart3, TrendingUp, Fi
 import { LineChart, Line, Tooltip, ResponsiveContainer, YAxis, PieChart, Pie, Cell, Legend } from 'recharts';
 
 const RechartsSparkline = ({ data }) => {
-  if (!data || data.length < 2) return <div style={{width: '120px', height: '40px'}}></div>;
+  if (!data || data.length === 0) return <div style={{width: '120px', height: '40px'}}></div>;
   
-  const chartData = data;
-  const values = data.map(d => d.value);
+  let chartData = data;
+  if (data.length === 1) {
+    chartData = [data[0], data[0]]; // Duplicate point to draw a flat line/dot
+  }
+  
+  const values = chartData.map(d => d.value);
   const min = Math.min(...values);
   const max = Math.max(...values);
   const diff = max - min || 1;
@@ -125,20 +129,23 @@ function App() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const [kpiRes, trendRes, sumRes, stalledRes] = await Promise.all([
+        const [kpiRes, trendRes, phaseRes, sumRes, stalledRes] = await Promise.all([
           fetch('/api_data/kpis.json'),
           fetch('/api_data/trending.json'),
+          fetch('/api_data/phases.json'),
           fetch('/api_data/summary.json'),
           fetch('/api_data/stalled.json')
         ]);
         
         const kpiData = await kpiRes.json();
         const trendData = await trendRes.json();
+        const phaseData = await phaseRes.json();
         const sumData = await sumRes.json();
         const stalledData = await stalledRes.json();
         
         setKpis(kpiData);
         setTrending(trendData);
+        setPhases(phaseData);
         setSummary(sumData);
         setStalled(stalledData);
       } catch (err) {
@@ -361,7 +368,7 @@ function App() {
             </div>
 
             {/* Idea 3: True Funnel */}
-            <h3 style={{ fontSize: '1rem', color: '#fff', marginBottom: '1rem' }}>True Success Funnel</h3>
+            <h3 style={{ fontSize: '1rem', color: '#fff', marginBottom: '1rem', width: '100%', textAlign: 'center' }}>True Success Funnel</h3>
             <div className="funnel-container" style={{ alignItems: 'center', width: '100%', gap: '0.3rem' }}>
                <div className="funnel-row" style={{ width: '100%', background: 'rgba(59, 130, 246, 0.05)', border: '1px solid #3b82f640', justifyContent: 'center', padding: '0.5rem', gap: '1rem' }}>
                   <span style={{ color: '#3b82f6', fontSize: '0.9rem' }}>Total Created</span>

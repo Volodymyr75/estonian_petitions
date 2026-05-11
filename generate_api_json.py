@@ -8,7 +8,8 @@ from services.analytics import (
     get_overview_kpis,
     get_trending_initiatives,
     get_recent_summary,
-    get_stalled_initiatives
+    get_stalled_initiatives,
+    get_phase_distribution
 )
 
 class NumpyEncoder(json.JSONEncoder):
@@ -64,9 +65,14 @@ def generate_static_json():
     except Exception as e:
         print(f"❌ Error generating stalled: {e}")
         
-    # We create an empty phases.json just in case something breaks, though we'll remove it from frontend
-    with open(output_dir / "phases.json", "w", encoding="utf-8") as f:
-        json.dump([], f)
+    # 5. Phases
+    try:
+        phases = get_phase_distribution()
+        with open(output_dir / "phases.json", "w", encoding="utf-8") as f:
+            json.dump(phases, f, ensure_ascii=False, cls=NumpyEncoder)
+        print("✅ phases.json generated")
+    except Exception as e:
+        print(f"❌ Error generating phases: {e}")
     
     print("All JSON files generated successfully!")
 
