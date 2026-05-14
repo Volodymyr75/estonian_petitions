@@ -8,9 +8,9 @@ from services.analytics import (
     get_overview_kpis,
     get_trending_initiatives,
     get_recent_summary,
-    get_stalled_initiatives,
     get_phase_distribution,
-    get_approaching_deadline_initiatives
+    get_approaching_deadline_initiatives,
+    get_stalled_and_recent_successes
 )
 
 class NumpyEncoder(json.JSONEncoder):
@@ -57,14 +57,14 @@ def generate_static_json():
     except Exception as e:
         print(f"❌ Error generating summary: {e}")
 
-    # 4. Stalled
+    # 4. Outcomes (Stalled vs Recent Successes)
     try:
-        stalled = get_stalled_initiatives(limit=10)
-        with open(output_dir / "stalled.json", "w", encoding="utf-8") as f:
-            json.dump(stalled, f, ensure_ascii=False, cls=NumpyEncoder)
-        print("✅ stalled.json generated")
+        outcomes = get_stalled_and_recent_successes(limit_stalled=5, limit_recent=5)
+        with open(output_dir / "outcomes.json", "w", encoding="utf-8") as f:
+            json.dump(outcomes, f, ensure_ascii=False, cls=NumpyEncoder)
+        print("✅ outcomes.json generated")
     except Exception as e:
-        print(f"❌ Error generating stalled: {e}")
+        print(f"❌ Error generating outcomes: {e}")
         
     # 5. Deadline
     try:

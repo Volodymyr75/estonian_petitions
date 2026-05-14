@@ -57,7 +57,7 @@ function App() {
   const [trending, setTrending] = useState([]);
   const [phases, setPhases] = useState([]);
   const [summary, setSummary] = useState(null);
-  const [stalled, setStalled] = useState([]);
+  const [outcomes, setOutcomes] = useState({ stalled: [], recent_successes: [] });
   const [deadline, setDeadline] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -91,8 +91,11 @@ function App() {
       growth: "7d growth",
       process: "Process & Funnel",
       funnel_title: "Phase Funnel",
-      stalled_title: "Stalled Initiatives",
+      outcomes_title: "Bureaucratic Blackhole vs. Recent Wins",
+      stalled_subtitle: "Longest Stalled (Top 5)",
+      recent_subtitle: "Recent Successes (Top 5)",
       idle_days: "days idle",
+      days_ago: "days ago",
       deadline_title: "Needs Your Voice (Approaching Deadline)",
       days_left: "days left",
       needed: "needed",
@@ -140,8 +143,11 @@ function App() {
       growth: "7p kasv",
       process: "Protsess ja Lehter",
       funnel_title: "Faaside Lehter",
-      stalled_title: "Seisvad Algatused",
+      outcomes_title: "Bürokraatlik Auk vs. Viimased Võidud",
+      stalled_subtitle: "Kõige Kauem Seisnud (Top 5)",
+      recent_subtitle: "Viimased Kordaminekud (Top 5)",
       idle_days: "päeva ootel",
+      days_ago: "päeva tagasi",
       deadline_title: "Vajab Sinu Häält (Tähtaeg Läheneb)",
       days_left: "päeva jäänud",
       needed: "puudu",
@@ -166,12 +172,12 @@ function App() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const [kpiRes, trendRes, phaseRes, sumRes, stalledRes, deadlineRes] = await Promise.all([
+        const [kpiRes, trendRes, phaseRes, sumRes, outcomesRes, deadlineRes] = await Promise.all([
           fetch('/api_data/kpis.json'),
           fetch('/api_data/trending.json'),
           fetch('/api_data/phases.json'),
           fetch('/api_data/summary.json'),
-          fetch('/api_data/stalled.json'),
+          fetch('/api_data/outcomes.json'),
           fetch('/api_data/deadline.json')
         ]);
         
@@ -179,14 +185,14 @@ function App() {
         const trendData = await trendRes.json();
         const phaseData = await phaseRes.json();
         const sumData = await sumRes.json();
-        const stalledData = await stalledRes.json();
+        const outcomesData = await outcomesRes.json();
         const deadlineData = await deadlineRes.json();
         
         setKpis(kpiData);
         setTrending(trendData);
         setPhases(phaseData);
         setSummary(sumData);
-        setStalled(stalledData);
+        setOutcomes(outcomesData);
         setDeadline(deadlineData);
       } catch (err) {
         console.error("Error fetching data:", err);
@@ -468,24 +474,53 @@ function App() {
             </div>
           </div>
           
-          <div className="glass-panel">
-            <h2 className="section-title"><AlertTriangle size={20} color="#fca5a5"/> {activeT.stalled_title}</h2>
+          <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column' }}>
+            <h2 className="section-title"><AlertTriangle size={20} color="#fca5a5"/> {activeT.outcomes_title}</h2>
+            
+            {/* Bureaucratic Blackhole */}
+            <div style={{ marginBottom: '1.5rem' }}>
+              <h3 style={{ fontSize: '0.9rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '0.8rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>
+                {activeT.stalled_subtitle}
+              </h3>
+              <div>
+                {(outcomes.stalled || []).map(item => (
+                  <a href={item.url} target="_blank" rel="noopener noreferrer" className="list-item" key={item.id} style={{display:'flex', textDecoration:'none', color:'inherit'}}>
+                    <div className="item-info" style={{flex: 1}}>
+                      <h4 style={{fontSize: '0.95rem', whiteSpace: 'normal', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'}}>{item.title}</h4>
+                      <span style={{color: phaseColors[item.phase] || '#cbd5e1', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.5px'}}>{getPhaseName(item.phase)}</span>
+                    </div>
+                    <div>
+                      <span className="stalled-badge" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                        {item.days_stalled} {activeT.idle_days}
+                      </span>
+                    </div>
+                  </a>
+                ))}
+                {(!outcomes.stalled || outcomes.stalled.length === 0) && <p style={{color: 'var(--text-muted)', fontSize: '0.9rem'}}>No stalled initiatives.</p>}
+              </div>
+            </div>
+
+            {/* Recent Successes */}
             <div>
-              {stalled.map(item => (
-                <a href={item.url} target="_blank" rel="noopener noreferrer" className="list-item" key={item.id} style={{display:'flex', textDecoration:'none', color:'inherit'}}>
-                  <div className="item-info" style={{flex: 1}}>
-                    <h4 style={{fontSize: '1.05rem', whiteSpace: 'normal', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'}}>{item.title}</h4>
-                    <span style={{color: phaseColors[item.phase] || '#cbd5e1', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.5px'}}>{getPhaseName(item.phase)}</span>
-                  </div>
-                  <div>
-                    <span className="stalled-badge">{item.days_stalled} {activeT.idle_days}</span>
-                    <button style={{background:'transparent', border:'none', color:'var(--accent)', cursor:'pointer', marginLeft:'0.5rem'}}>
-                      <ChevronRight size={20}/>
-                    </button>
-                  </div>
-                </a>
-              ))}
-              {stalled.length === 0 && <p style={{color: 'var(--text-muted)'}}>No stalled initiatives.</p>}
+              <h3 style={{ fontSize: '0.9rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '0.8rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>
+                {activeT.recent_subtitle}
+              </h3>
+              <div>
+                {(outcomes.recent_successes || []).map(item => (
+                  <a href={item.url} target="_blank" rel="noopener noreferrer" className="list-item" key={item.id} style={{display:'flex', textDecoration:'none', color:'inherit'}}>
+                    <div className="item-info" style={{flex: 1}}>
+                      <h4 style={{fontSize: '0.95rem', whiteSpace: 'normal', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'}}>{item.title}</h4>
+                      <span style={{color: phaseColors[item.phase] || '#10b981', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.5px'}}>{getPhaseName(item.phase)}</span>
+                    </div>
+                    <div>
+                      <span className="stalled-badge" style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                        {item.days_ago} {activeT.days_ago}
+                      </span>
+                    </div>
+                  </a>
+                ))}
+                {(!outcomes.recent_successes || outcomes.recent_successes.length === 0) && <p style={{color: 'var(--text-muted)', fontSize: '0.9rem'}}>No recent successes.</p>}
+              </div>
             </div>
           </div>
 

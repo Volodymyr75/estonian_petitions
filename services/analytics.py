@@ -232,11 +232,12 @@ def get_recent_summary():
     finally:
         con.close()
 
-def get_stalled_initiatives(limit: int = 5):
-    """Retrieve initiatives stuck in a non-terminal phase with highest idle time."""
+def get_stalled_and_recent_successes(limit_stalled=5, limit_recent=5):
+    """Retrieve longest stalled initiatives and recently completed ones."""
     con = get_db_connection()
     try:
-        query = """
+        # 1. Stalled
+        stalled_query = """
         SELECT 
             id, 
             title, 
@@ -244,21 +245,45 @@ def get_stalled_initiatives(limit: int = 5):
             url,
             DATE_DIFF('day', CAST(updated_at AS DATE), CURRENT_DATE()) as days_stalled
         FROM initiatives
-        WHERE phase NOT IN ('done', 'rejected', 'archived')
-        ORDER BY updated_at ASC
+        WHERE phase IN ('parliament', 'government')
+        ORDER BY updated_at ASC NULLS LAST
         LIMIT ?
         """
-        res = con.execute(query, [limit])
+        res_stalled = con.execute(stalled_query, [limit_stalled])
         try:
-            records = res.df().to_dict(orient='records')
+            stalled_records = res_stalled.df().to_dict(orient='records')
         except Exception:
-            columns = [col[0] for col in res.description]
-            records = [dict(zip(columns, row)) for row in res.fetchall()]
+            columns = [col[0] for col in res_stalled.description]
+            stalled_records = [dict(zip(columns, row)) for row in res_stalled.fetchall()]
             
-        for r in records:
-            if not r.get('url'):
-                r['url'] = f"https://rahvaalgatus.ee/initiatives/{r['id']}"
-                
-        return records
+        # 2. Recent Successes
+        recent_query = """
+        SELECT 
+            id, 
+            title, 
+            phase, 
+            url,
+            DATE_DIFF('day', CAST(updated_at AS DATE), CURRENT_DATE()) as days_ago
+        FROM initiatives
+        WHERE phase = 'done'
+        ORDER BY updated_at DESC NULLS LAST
+        LIMIT ?
+        """
+        res_recent = con.execute(recent_query, [limit_recent])
+        try:
+            recent_records = res_recent.df().to_dict(orient='records')
+        except Exception:
+            columns = [col[0] for col in res_recent.description]
+            recent_records = [dict(zip(columns, row)) for row in res_recent.fetchall()]
+
+        for lst in [stalled_records, recent_records]:
+            for r in lst:
+                if not r.get('url'):
+                    r['url'] = f"https://rahvaalgatus.ee/initiatives/{r['id']}"
+
+        return {
+            "stalled": stalled_records,
+            "recent_successes": recent_records
+        }
     finally:
         con.close()
