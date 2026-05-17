@@ -96,6 +96,9 @@ function App() {
       recent_subtitle: "Recent Successes (Top 5)",
       idle_days: "days idle",
       days_ago: "days ago",
+      months_pending: "months pending",
+      months_to_success: "months to implement",
+      sigs: "sigs",
       deadline_title: "Needs Your Voice (Approaching Deadline)",
       days_left: "days left",
       needed: "needed",
@@ -148,6 +151,9 @@ function App() {
       recent_subtitle: "Viimased Kordaminekud (Top 5)",
       idle_days: "päeva ootel",
       days_ago: "päeva tagasi",
+      months_pending: "kuud ootel",
+      months_to_success: "kuud rakendamiseni",
+      sigs: "allkirja",
       deadline_title: "Vajab Sinu Häält (Tähtaeg Läheneb)",
       days_left: "päeva jäänud",
       needed: "puudu",
@@ -488,10 +494,11 @@ function App() {
                     <div className="item-info" style={{flex: 1}}>
                       <h4 style={{fontSize: '0.95rem', whiteSpace: 'normal', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'}}>{item.title}</h4>
                       <span style={{color: phaseColors[item.phase] || '#cbd5e1', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.5px'}}>{getPhaseName(item.phase)}</span>
+                      <span style={{color: '#94a3b8', fontSize: '0.85rem', marginLeft: '0.5rem'}}>• {(item.signatures_count || 0).toLocaleString()} {activeT.sigs}</span>
                     </div>
                     <div>
                       <span className="stalled-badge" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
-                        {item.days_stalled} {activeT.idle_days}
+                        {item.months_pending} {activeT.months_pending}
                       </span>
                     </div>
                   </a>
@@ -511,10 +518,11 @@ function App() {
                     <div className="item-info" style={{flex: 1}}>
                       <h4 style={{fontSize: '0.95rem', whiteSpace: 'normal', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'}}>{item.title}</h4>
                       <span style={{color: phaseColors[item.phase] || '#10b981', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.5px'}}>{getPhaseName(item.phase)}</span>
+                      <span style={{color: '#94a3b8', fontSize: '0.85rem', marginLeft: '0.5rem'}}>• {(item.signatures_count || 0).toLocaleString()} {activeT.sigs}</span>
                     </div>
                     <div>
                       <span className="stalled-badge" style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
-                        {item.days_ago} {activeT.days_ago}
+                        {item.months_to_success} {activeT.months_to_success}
                       </span>
                     </div>
                   </a>

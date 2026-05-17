@@ -243,10 +243,11 @@ def get_stalled_and_recent_successes(limit_stalled=5, limit_recent=5):
             title, 
             phase, 
             url,
-            DATE_DIFF('day', CAST(updated_at AS DATE), CURRENT_DATE()) as days_stalled
+            signatures_count,
+            DATE_DIFF('month', CAST(coalesce(created_at, ingested_at) AS DATE), CURRENT_DATE()) as months_pending
         FROM initiatives
         WHERE phase IN ('parliament', 'government')
-        ORDER BY updated_at ASC NULLS LAST
+        ORDER BY coalesce(created_at, ingested_at) ASC NULLS LAST
         LIMIT ?
         """
         res_stalled = con.execute(stalled_query, [limit_stalled])
@@ -263,7 +264,8 @@ def get_stalled_and_recent_successes(limit_stalled=5, limit_recent=5):
             title, 
             phase, 
             url,
-            DATE_DIFF('day', CAST(updated_at AS DATE), CURRENT_DATE()) as days_ago
+            signatures_count,
+            DATE_DIFF('month', CAST(coalesce(created_at, ingested_at) AS DATE), CAST(updated_at AS DATE)) as months_to_success
         FROM initiatives
         WHERE phase = 'done'
         ORDER BY updated_at DESC NULLS LAST
