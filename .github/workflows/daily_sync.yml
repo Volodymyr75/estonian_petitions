@@ -25,7 +25,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install requests duckdb pydantic python-dotenv pandas
+        pip install -r requirements.txt
         
     - name: Run ETL Sync Script
       id: sync_script

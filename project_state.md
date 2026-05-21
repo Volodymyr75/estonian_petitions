@@ -50,6 +50,10 @@ The immediate next step is building out the Process metrics.
   - **Context:** Pushing the MotherDuck connection string `md:` to Vercel but failing to load data.
   - **Resolution:** Added conditional logic in database services to remove the `read_only=True` parameter when the path starts with `md:`.
 
+- **GitHub Actions / Vercel Sync Failure (`InvalidInputException: motherduck_duckdb_cpp_init`)**
+  - **Context:** The automated daily sync failed with "Your DuckDB version (v1.5.3) is not yet supported by MotherDuck. The latest supported version is v1.5.2." because `requirements.txt` previously used `duckdb>=1.0.0`, allowing the unpinned installation of `1.5.3` which MotherDuck did not yet support. Furthermore, `.github/workflows/daily_sync.yml` was using a manual `pip install duckdb ...` bypassing `requirements.txt`.
+  - **Resolution:** Pinned the dependency to exactly `duckdb==1.5.2` in `requirements.txt` and updated `daily_sync.yml` to use `pip install -r requirements.txt` ensuring the locked version is installed on the runner. Added missing `pandas` to `requirements.txt`.
+
 - **Vercel / AWS Lambda Environment Crash (`IO Error: Can't find the home directory at ''`)**
   - **Context:** DuckDB attempts to initialize extension space in the user's `$HOME` directory, but AWS Lambda has an empty `HOME` variable.
   - **Resolution:** Forced `os.environ["HOME"] = "/tmp"` universally at the top of the python API modules before importing DuckDB.
