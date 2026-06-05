@@ -289,3 +289,77 @@ def get_stalled_and_recent_successes(limit_stalled=5, limit_recent=5):
         }
     finally:
         con.close()
+
+def get_process_metrics():
+    """Retrieve process analytics including phase durations, stalled status, and yearly activity pulse."""
+    con = get_db_connection()
+    try:
+        # 1. Median days to 1000 signatures
+        q_threshold = """
+        SELECT median(date_diff('day', CAST(i.created_at AS DATE), CAST(e.event_date AS DATE)))
+        FROM initiatives i
+        JOIN initiative_events e ON i.id = e.initiative_id
+        WHERE e.event_type = 'milestone-1000' AND i.created_at IS NOT NULL AND e.event_date >= i.created_at
+        """
+        val_threshold = con.execute(q_threshold).fetchone()[0]
+        
+        # 2. Median days from Created to Sent to Parliament
+        q_parliament = """
+        SELECT median(date_diff('day', CAST(i.created_at AS DATE), CAST(e.event_date AS DATE)))
+        FROM initiatives i
+        JOIN initiative_events e ON i.id = e.initiative_id
+        WHERE e.event_type = 'sent-to-parliament' AND i.created_at IS NOT NULL AND e.event_date >= i.created_at
+        """
+        val_parliament = con.execute(q_parliament).fetchone()[0]
+
+        # 3. Median days in Parliament before completion (done)
+        q_done = """
+        SELECT median(date_diff('day', CAST(e1.event_date AS DATE), CAST(COALESCE(e2.event_date, i.updated_at) AS DATE)))
+        FROM initiatives i
+        JOIN initiative_events e1 ON i.id = e1.initiative_id AND e1.event_type = 'sent-to-parliament'
+        LEFT JOIN initiative_events e2 ON i.id = e2.initiative_id AND e2.event_type IN ('parliament-finished', 'finished-in-government')
+        WHERE i.phase = 'done' AND COALESCE(e2.event_date, i.updated_at) >= e1.event_date
+        """
+        val_done = con.execute(q_done).fetchone()[0]
+
+        # 4. Stalled statistics
+        q_stalled = """
+        SELECT 
+            COUNT(*) as total_in_progress,
+            SUM(CASE WHEN date_diff('month', CAST(coalesce(created_at, ingested_at) AS DATE), CURRENT_DATE()) >= 12 THEN 1 ELSE 0 END) as stalled_count
+        FROM initiatives
+        WHERE phase IN ('parliament', 'government')
+        """
+        res_stalled = con.execute(q_stalled).fetchone()
+        total_in_progress = res_stalled[0] or 0
+        stalled_count = res_stalled[1] or 0
+
+        # 5. Yearly Activity Pulse
+        q_pulse = """
+        SELECT 
+            strftime(event_date, '%Y') as year,
+            count(*) as count
+        FROM initiative_events
+        WHERE event_date IS NOT NULL
+        GROUP BY year
+        ORDER BY year ASC
+        """
+        res_pulse = con.execute(q_pulse)
+        try:
+            yearly_pulse = res_pulse.df().to_dict(orient='records')
+        except Exception:
+            columns = [col[0] for col in res_pulse.description]
+            yearly_pulse = [dict(zip(columns, row)) for row in res_pulse.fetchall()]
+
+        return {
+            "median_days_to_threshold": round(val_threshold) if val_threshold is not None else None,
+            "median_days_to_parliament": round(val_parliament) if val_parliament is not None else None,
+            "median_days_in_parliament": round(val_done) if val_done is not None else None,
+            "total_in_progress": total_in_progress,
+            "stalled_count": stalled_count,
+            "stalled_ratio": round((stalled_count / total_in_progress) * 100, 1) if total_in_progress > 0 else 0.0,
+            "yearly_pulse": yearly_pulse
+        }
+    finally:
+        con.close()
+

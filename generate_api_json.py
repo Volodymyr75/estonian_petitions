@@ -10,8 +10,12 @@ from services.analytics import (
     get_recent_summary,
     get_phase_distribution,
     get_approaching_deadline_initiatives,
-    get_stalled_and_recent_successes
+    get_stalled_and_recent_successes,
+    get_process_metrics,
+    get_db_connection
 )
+from services.initiatives import get_initiative_timeline
+
 
 class NumpyEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -21,6 +25,8 @@ class NumpyEncoder(json.JSONEncoder):
             return float(obj)
         if isinstance(obj, np.ndarray):
             return obj.tolist()
+        if hasattr(obj, "isoformat"):
+            return obj.isoformat()
         return super(NumpyEncoder, self).default(obj)
 
 def generate_static_json():
@@ -84,6 +90,66 @@ def generate_static_json():
     except Exception as e:
         print(f"❌ Error generating phases: {e}")
     
+    # 6. Process Metrics
+    try:
+        process_metrics = get_process_metrics()
+        with open(output_dir / "process_metrics.json", "w", encoding="utf-8") as f:
+            json.dump(process_metrics, f, ensure_ascii=False, cls=NumpyEncoder)
+        print("✅ process_metrics.json generated")
+    except Exception as e:
+        print(f"❌ Error generating process_metrics: {e}")
+
+    # 7. Top Timelines
+    try:
+        con = get_db_connection()
+        top_query = """
+        SELECT DISTINCT i.id, i.title, i.signatures_count
+        FROM initiatives i
+        JOIN initiative_events e ON i.id = e.initiative_id
+        ORDER BY i.signatures_count DESC
+        LIMIT 30
+        """
+        res = con.execute(top_query)
+        try:
+            top_inits = res.df().to_dict(orient='records')
+        except Exception:
+            columns = [col[0] for col in res.description]
+            top_inits = [dict(zip(columns, row)) for row in res.fetchall()]
+        con.close()
+
+        timelines = {}
+        for r in top_inits:
+            init_id = r['id']
+            timelines[init_id] = {
+                "title": r['title'],
+                "signatures_count": r['signatures_count'],
+                "events": get_initiative_timeline(init_id)
+            }
+            
+        with open(output_dir / "top_timelines.json", "w", encoding="utf-8") as f:
+            json.dump(timelines, f, ensure_ascii=False, cls=NumpyEncoder)
+        print("✅ top_timelines.json generated")
+    except Exception as e:
+        print(f"❌ Error generating top_timelines: {e}")
+
+    # 8. Initiatives List (for Autocomplete Search)
+    try:
+        con = get_db_connection()
+        list_query = "SELECT id, title, phase FROM initiatives ORDER BY signatures_count DESC"
+        res = con.execute(list_query)
+        try:
+            inits_list = res.df().to_dict(orient='records')
+        except Exception:
+            columns = [col[0] for col in res.description]
+            inits_list = [dict(zip(columns, row)) for row in res.fetchall()]
+        con.close()
+
+        with open(output_dir / "initiatives_list.json", "w", encoding="utf-8") as f:
+            json.dump(inits_list, f, ensure_ascii=False, cls=NumpyEncoder)
+        print("✅ initiatives_list.json generated")
+    except Exception as e:
+        print(f"❌ Error generating initiatives_list: {e}")
+
     print("All JSON files generated successfully!")
 
 if __name__ == "__main__":

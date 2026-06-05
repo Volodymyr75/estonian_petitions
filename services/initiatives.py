@@ -14,11 +14,9 @@ except ImportError:
 DB_PATH = os.environ.get("DB_PATH", os.path.join(os.path.dirname(os.path.dirname(__file__)), 'petitions.duckdb'))
 
 def get_db_connection():
-    # Vercel serverless functions need a writable home directory (/tmp)
-    config = {'home_directory': '/tmp'}
     if DB_PATH.startswith("md:"):
-        return duckdb.connect(DB_PATH, config=config)
-    return duckdb.connect(DB_PATH, read_only=True, config=config)
+        return duckdb.connect(DB_PATH)
+    return duckdb.connect(DB_PATH, read_only=True)
 
 def get_active_initiatives():
     """Retrieve all active initiatives."""
@@ -53,9 +51,14 @@ def get_initiative_timeline(initiative_id: str):
         """
         res = con.execute(query, [initiative_id])
         try:
-            return res.df().to_dict(orient='records')
+            records = res.df().to_dict(orient='records')
         except Exception:
             columns = [col[0] for col in res.description]
-            return [dict(zip(columns, row)) for row in res.fetchall()]
+            records = [dict(zip(columns, row)) for row in res.fetchall()]
+            
+        for r in records:
+            if 'event_date' in r and hasattr(r['event_date'], 'isoformat'):
+                r['event_date'] = r['event_date'].isoformat()
+        return records
     finally:
         con.close()

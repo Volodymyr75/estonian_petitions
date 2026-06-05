@@ -12,16 +12,17 @@
 - **Languages Supported in UI:** English, Estonian.
 
 ## 2. Current Status
-**Current Phase:** Phase 2 (Core Analytics & Dashboard) is IN PROGRESS.
-**Last Update:** May 10, 2026.
+**Current Phase:** Phase 3 (Institutional Layer) is IN PROGRESS.
+**Last Update:** June 5, 2026.
 **Overall Progress:** 
 Foundational data infrastructure and API layers are established. The local DuckDB database was successfully migrated to **MotherDuck** (`estonia_petitions`). The project is successfully linked to GitHub and deployed live on **Vercel**. End-to-end communication from the MotherDuck cloud database to the Vercel Python API, and finally to the React frontend, is fully functional. 
 
-We have successfully completed two major analytical dashboard blocks:
-1. **Overview Block:** Live KPI metrics, a stacked-bar Phase Distribution visualizer, and an automated Recent Platform Activity summary based on active metadata logs.
-2. **Momentum Block:** Shows trending active petitions, their raw signature velocity (+X sig./day), and renders custom SVG Sparklines from parsed 7-day snapshot arrays directly parsed natively via MotherDuck SQL.
+We have successfully completed all core analytical blocks of Phase 2:
+1. **Overview Block:** Live KPI metrics, stacked-bar Phase Distribution visualizer, and Recent Platform Activity.
+2. **Momentum Block:** Trending active petitions with signature velocity and interactive recharts Sparklines.
+3. **Process Metrics Block:** Stage transition durations (bottleneck flow), stalled rates, and an autocomplete-powered vertical timeline log for all 1,000+ petitions.
 
-The immediate next step is building out the Process metrics.
+The immediate next step is building out the Institutional (Riigikogu Open Data) metrics.
 
 ## 3. Completed Phases & Milestones
 
@@ -33,13 +34,15 @@ The immediate next step is building out the Process metrics.
 - **Result:** Successfully fetched and populated over 1,000 active/archived initiatives into the local `petitions.duckdb`.
 - **Migration:** Created a python script to automatically migrate the local `.duckdb` tables to a cloud `MotherDuck` database securely.
 
-### Phase 2: Core Analytics & Dashboard (In Progress)
+### Phase 2: Core Analytics, Process Metrics & Dashboard (Completed)
 - Extracted and safely stored 1,000+ historical lifecycle events referencing the primary initiatives.
 - Developed `services/analytics.py` and `services/initiatives.py` pulling logic (decoupled to remain MCP-ready).
 - Implemented `api/index.py` (FastAPI) mapping decoupled functions to Vercel serverless HTTP routes.
 - **Infrastructure:** Set up a global exception handler in FastAPI to return Python stack traces as JSON.
 - **Deployment:** Automated CI/CD pipeline set up via GitHub to Vercel.
-- **Block 1 (Overview) & Block 2 (Momentum)** are fully coded, linked to analytical SQL APIs, and visually styled.
+- **Overview, Momentum, and Process blocks** are fully coded, linked to analytical SQL APIs, and visually styled.
+- **Bug Fix:** Resolved FastAPI crash due to missing `get_stalled_initiatives` import in `api/index.py`.
+
 
 ## 4. Known Issues, Errors & Troubleshooting Log
 
@@ -94,6 +97,20 @@ The immediate next step is building out the Process metrics.
 > ⚠️ **CRITICAL DEVELOPMENT WORKFLOW NOTE:** Because the GitHub Action (`daily_sync.yml`) now automatically commits static JSON updates directly to the `main` branch every morning, **you must run `git pull --rebase` before beginning any new coding session.** Failure to do so will result in push rejections and merge conflicts on the `/public/api_data/` files. Never push without fetching the latest remote state first!
 
 ## 5. Next Steps
-- **Dashboard Expansion (Phase 2):** Fully build out the Process metrics block (lifecycle timelines, event funnels).
-- **Phase 3 (Institutional Layer):** Integrate the Riigikogu Open Data API. We need to fetch parliamentary voting data and securely link it to initiatives that reached the parliament floor.
-- **Phase 4 (AI Copilot & MCP):** Expose existing python `services/` logic as official Model Context Protocol tools.
+
+### Phase 3: Institutional Layer (Riigikogu Integration) - Actionable Blocks:
+- [ ] **Block 3.1: Riigikogu Ingestion & DB Schema**
+  - Connect to the Riigikogu Open Data API.
+  - Create client in `etl/clients/riigikogu.py` to fetch vote counts, session dates, faction details, and results.
+  - Expand tables `riigikogu_votings` and `riigikogu_voting_details` in `petitions.duckdb`.
+- [ ] **Block 3.2: Analytical Mapping Service**
+  - Map parliamentary vote results back to civic initiatives using title matching, tags, or manual mapping indexes.
+  - Implement service in `services/institutions.py`.
+  - Add to `generate_api_json.py` to export `institutions.json`.
+- [ ] **Block 3.3: Parliament Dashboard Block**
+  - Create React component showing vote outcome breakdowns, faction behaviors, and timelines for initiatives that reached parliament.
+- [ ] **Block 3.4: Integration & Verification**
+
+### Future Phases:
+- **Phase 4 (AI Copilot & MCP):** Expose existing python `services/` logic as official Model Context Protocol tools for natural-language queries.
+
