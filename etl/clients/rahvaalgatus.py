@@ -25,9 +25,9 @@ class RahvaalgatusClient:
         response.raise_for_status()
         return response.json()
 
-    def get_events(self, limit: int = 1000) -> List[Dict[str, Any]]:
-        """Fetch initiative events."""
-        url = f"{self.BASE_URL}/initiative-events?limit={limit}"
+    def get_events(self, limit: int = 5000) -> List[Dict[str, Any]]:
+        """Fetch initiative events, sorted by newest first."""
+        url = f"{self.BASE_URL}/initiative-events?limit={limit}&order=-occurredAt"
         headers = self.HEADERS.copy()
         headers["Accept"] = "application/vnd.rahvaalgatus.initiative-event+json; v=1"
         response = requests.get(url, headers=headers)

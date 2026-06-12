@@ -206,7 +206,7 @@ def get_recent_summary():
     con = get_db_connection()
     try:
         # 1. New initiatives in last 30 days (fallback to ingested_at if created_at is mostly null)
-        q1 = "SELECT count(*) FROM initiatives WHERE coalesce(created_at, ingested_at) >= (SELECT max(coalesce(created_at, ingested_at)) FROM initiatives) - interval 30 day"
+        q1 = "SELECT count(*) FROM initiatives WHERE created_at >= (SELECT max(created_at) FROM initiatives) - interval 30 day"
         new_count = con.execute(q1).fetchone()[0]
 
         # 2. Latest event
