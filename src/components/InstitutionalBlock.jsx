@@ -158,10 +158,10 @@ export default function InstitutionalBlock({ lang }) {
       </div>
 
       {/* DUAL-COLUMN WORKSPACE */}
-      <div className="dashboard-grid" style={{ gridTemplateColumns: '2fr 3fr', alignItems: 'stretch' }}>
+      <div className="dashboard-grid institutions-layout" style={{ alignItems: 'stretch' }}>
         
         {/* LEFT COLUMN: LIST & SEARCH */}
-        <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', maxHeight: '650px', padding: '1.2rem' }}>
+        <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', maxHeight: '650px', padding: '1.2rem', minWidth: 0 }}>
           <h3 style={{ fontSize: '1.05rem', color: '#fff', marginBottom: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <FileText size={18} color="#60a5fa" />
             {activeT.mapped_title} ({filteredPetitions.length})
@@ -255,7 +255,7 @@ export default function InstitutionalBlock({ lang }) {
         </div>
 
         {/* RIGHT COLUMN: DETAILS */}
-        <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', padding: '1.5rem', maxHeight: '650px', overflowY: 'auto' }}>
+        <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', padding: '1.5rem', maxHeight: '650px', overflowY: 'auto', minWidth: 0 }}>
           {selectedDetails ? (
             <div>
               {/* Header Info */}
