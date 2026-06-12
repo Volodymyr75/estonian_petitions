@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Activity, Users, FileText, Zap, ChevronRight, BarChart3, TrendingUp, Filter, AlertTriangle } from 'lucide-react';
 import { LineChart, Line, Tooltip, ResponsiveContainer, YAxis, PieChart, Pie, Cell, Legend } from 'recharts';
 import ProcessMetrics from './ProcessMetrics';
+import InstitutionalBlock from './components/InstitutionalBlock';
 
 
 const RechartsSparkline = ({ data }) => {
@@ -538,6 +539,9 @@ function App() {
 
         {/* BLOCK 3.5: PROCESS LIFE CYCLE METRICS */}
         <ProcessMetrics lang={lang} />
+
+        {/* BLOCK 3.8: INSTITUTIONAL / PARLIAMENT LAYER */}
+        <InstitutionalBlock lang={lang} />
 
         {/* BLOCK 4: FOOTER / ABOUT */}
         <div className="dashboard-grid" style={{gridTemplateColumns: '1fr', marginTop: '1rem', marginBottom: '2rem'}}>

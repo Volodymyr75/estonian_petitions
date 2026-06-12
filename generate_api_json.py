@@ -15,6 +15,11 @@ from services.analytics import (
     get_db_connection
 )
 from services.initiatives import get_initiative_timeline
+from services.institutions import (
+    get_institutional_overview,
+    get_mapped_initiatives,
+    get_petition_details_and_votings
+)
 
 
 class NumpyEncoder(json.JSONEncoder):
@@ -149,6 +154,33 @@ def generate_static_json():
         print("✅ initiatives_list.json generated")
     except Exception as e:
         print(f"❌ Error generating initiatives_list: {e}")
+        
+    # 9. Institutions
+    try:
+        inst_overview = get_institutional_overview()
+        inst_mapped = get_mapped_initiatives()
+        
+        with open(output_dir / "institutions.json", "w", encoding="utf-8") as f:
+            json.dump({
+                "overview": inst_overview,
+                "petitions": inst_mapped
+            }, f, ensure_ascii=False, cls=NumpyEncoder)
+        print("✅ institutions.json generated")
+        
+        # 10. Institutions Details
+        inst_details = {}
+        for pet in inst_mapped:
+            init_id = pet.get('initiative_id')
+            if init_id:
+                d = get_petition_details_and_votings(init_id)
+                if d:
+                    inst_details[init_id] = d
+                    
+        with open(output_dir / "institutions_details.json", "w", encoding="utf-8") as f:
+            json.dump(inst_details, f, ensure_ascii=False, cls=NumpyEncoder)
+        print("✅ institutions_details.json generated")
+    except Exception as e:
+        print(f"❌ Error generating institutions data: {e}")
 
     print("All JSON files generated successfully!")
 
