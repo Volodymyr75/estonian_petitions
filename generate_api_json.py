@@ -4,6 +4,19 @@ import duckdb
 import numpy as np
 from pathlib import Path
 
+# Load .env file and default to MotherDuck if token is present
+env_path = Path(".env")
+if env_path.exists():
+    with open(env_path, "r") as f:
+        for line in f:
+            if "=" in line and not line.startswith("#"):
+                key, val = line.strip().split("=", 1)
+                os.environ[key] = val
+
+if "MOTHERDUCK_TOKEN" in os.environ and not os.environ.get("DB_PATH"):
+    os.environ["DB_PATH"] = "md:estonia_petitions"
+
+
 from services.analytics import (
     get_overview_kpis,
     get_trending_initiatives,
