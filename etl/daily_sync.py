@@ -322,7 +322,12 @@ if __name__ == "__main__":
         print("--- Syncing Rahvaalgatus ---")
         sync_initiatives()
         print("--- Syncing Riigikogu ---")
-        sync_riigikogu()
+        try:
+            sync_riigikogu()
+        except Exception as riigikogu_err:
+            print(f"\n⚠️ WARNING: Riigikogu sync failed, but continuing with Rahvaalgatus data. Error: {riigikogu_err}")
+            import traceback
+            traceback.print_exc()
         print("Sync completed successfully.")
     except Exception as e:
         print(f"\nERROR DURING SYNC: {e}")
