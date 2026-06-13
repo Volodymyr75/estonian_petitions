@@ -13,7 +13,7 @@
 
 ## 2. Current Status
 **Current Phase:** Phase 4 (AI Copilot & MCP) is PLANNED.
-**Last Update:** June 12, 2026.
+**Last Update:** June 13, 2026.
 **Overall Progress:** 
 Foundational data infrastructure and API layers are established. The local DuckDB database was successfully migrated to **MotherDuck** (`estonia_petitions`). The project is successfully linked to GitHub and deployed live on **Vercel**. End-to-end communication from the MotherDuck cloud database to the Vercel Python API, and finally to the React frontend, is fully functional. 
 
@@ -51,6 +51,7 @@ The immediate next step is building the AI Copilot & MCP layer.
 - Created an analytical mapping service `services/institutions.py` to link parliamentary proceedings and votes back to civic initiatives using exact `senderReference` UUIDs.
 - Updated `generate_api_json.py` to pre-calculate and export static `institutions.json` and `institutions_details.json`.
 - Implemented `InstitutionalBlock.jsx` component displaying petition progress in parliament, draft bill timelines, and visual breakdowns of faction votes. Rendered the block in `App.jsx`.
+- **Telegram Notification Warning State:** Added support for a warning (yellow) notification state in the daily sync GitHub workflow. If the main Rahvaalgatus sync succeeds but the Riigikogu (Parliament) sync fails due to API timeouts/downtime, the workflow exits with status 0 but sends a yellow notification highlighting the partial failure, rather than triggering a red error alert.
 
 
 ## 4. Known Issues, Errors & Troubleshooting Log
@@ -102,6 +103,10 @@ The immediate next step is building the AI Copilot & MCP layer.
     - **Follow-up Feature (Translations & Footer):** Fully translated the "Fate of Initiatives" block, the donut chart, and funnel into Estonian. Added a new full-width "About this Project" footer block containing the project's tech stack, a link to the GitHub repository, and contact email (`strembov@gmail.com`).
     - **Follow-up Feature (Outcomes Block):** Replaced the list of 10 "Stalled Initiatives" with a split view: "Bureaucratic Blackhole" (Top 5 longest stalled initiatives) vs "Recent Wins" (Top 5 most recently successfully implemented). Modified `analytics.py` and `generate_api_json.py` to calculate these together and export to `outcomes.json`.
     - **Follow-up UI UX Tweak:** Upgraded the Outcomes block metrics to display actionable context. Replaced the generic "updated_at" tracking with real project lifecycle metrics: displaying total collected signatures and exact age in months since creation ("70 months pending" vs "12 months to implement").
+
+- **Riigikogu API Timeouts (`ConnectTimeoutError` during Sync)**
+  - **Context:** The daily automated sync failed due to `api.riigikogu.ee` connection timeouts, which broke the entire daily run and sent a red alert, even though Rahvaalgatus data had synced correctly.
+  - **Resolution:** Wrapped the Riigikogu sync routine in a try-except block to gracefully continue when the parliament server is unreachable. Added status signaling via `GITHUB_ENV` to communicate a "partial success" state, splitting the Telegram workflow notifications into green (all succeeded) and yellow (partial sync, parliament API timeout) states.
 
 > ⚠️ **CRITICAL DEVELOPMENT WORKFLOW NOTE:** Because the GitHub Action (`daily_sync.yml`) now automatically commits static JSON updates directly to the `main` branch every morning, **you must run `git pull --rebase` before beginning any new coding session.** Failure to do so will result in push rejections and merge conflicts on the `/public/api_data/` files. Never push without fetching the latest remote state first!
 
