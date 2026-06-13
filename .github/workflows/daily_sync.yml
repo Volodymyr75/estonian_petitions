@@ -12,6 +12,8 @@ jobs:
       contents: write
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+      TELEGRAM_TO: ${{ secrets.TELEGRAM_TO }}
     
     steps:
     - name: Checkout repository
@@ -49,26 +51,33 @@ jobs:
         git add public/api_data/
         git diff --quiet && git diff --staged --quiet || (git commit -m "chore: update daily static api data" && git push)
 
-    - name: Send Telegram Notification (Success)
-      if: success() && env.TELEGRAM_TOKEN != ''
+    - name: Send Telegram Notification (Success - Green)
+      if: success() && env.TELEGRAM_TOKEN != '' && (env.SYNC_STATUS == 'success' || env.SYNC_STATUS == '')
       uses: appleboy/telegram-action@master
-      env:
-        TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
       with:
-        to: ${{ secrets.TELEGRAM_TO }}
-        token: ${{ secrets.TELEGRAM_TOKEN }}
+        to: ${{ env.TELEGRAM_TO }}
+        token: ${{ env.TELEGRAM_TOKEN }}
         message: |
           🟢 *Estonian Civic Analytics*
           Daily MotherDuck Sync completed successfully\!
 
+    - name: Send Telegram Notification (Partial Success - Yellow)
+      if: success() && env.TELEGRAM_TOKEN != '' && env.SYNC_STATUS == 'partial'
+      uses: appleboy/telegram-action@master
+      with:
+        to: ${{ env.TELEGRAM_TO }}
+        token: ${{ env.TELEGRAM_TOKEN }}
+        message: |
+          🟡 *Estonian Civic Analytics*
+          Daily MotherDuck Sync completed with warnings\!
+          Rahvaalgatus sync succeeded, but Riigikogu (Parliament) sync timed out or failed\.
+
     - name: Send Telegram Notification (Failure)
       if: failure() && env.TELEGRAM_TOKEN != ''
       uses: appleboy/telegram-action@master
-      env:
-        TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
       with:
-        to: ${{ secrets.TELEGRAM_TO }}
-        token: ${{ secrets.TELEGRAM_TOKEN }}
+        to: ${{ env.TELEGRAM_TO }}
+        token: ${{ env.TELEGRAM_TOKEN }}
         message: |
           🔴 *Estonian Civic Analytics*
           ERROR: Daily MotherDuck Sync FAILED\!

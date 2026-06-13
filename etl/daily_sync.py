@@ -321,16 +321,43 @@ if __name__ == "__main__":
             
         print("--- Syncing Rahvaalgatus ---")
         sync_initiatives()
+        
+        riigikogu_success = True
         print("--- Syncing Riigikogu ---")
         try:
             sync_riigikogu()
         except Exception as riigikogu_err:
+            riigikogu_success = False
             print(f"\n⚠️ WARNING: Riigikogu sync failed, but continuing with Rahvaalgatus data. Error: {riigikogu_err}")
             import traceback
             traceback.print_exc()
+            
+        # Write status to GitHub Actions environment if applicable
+        github_env_path = os.environ.get("GITHUB_ENV")
+        if github_env_path:
+            try:
+                with open(github_env_path, "a") as f:
+                    if riigikogu_success:
+                        f.write("SYNC_STATUS=success\n")
+                    else:
+                        f.write("SYNC_STATUS=partial\n")
+                print(f"Wrote SYNC_STATUS to GITHUB_ENV: {'success' if riigikogu_success else 'partial'}")
+            except Exception as env_err:
+                print(f"Failed to write GITHUB_ENV: {env_err}")
+                
         print("Sync completed successfully.")
     except Exception as e:
         print(f"\nERROR DURING SYNC: {e}")
         import traceback
         traceback.print_exc()
+        
+        # Write failure status to GITHUB_ENV if possible
+        github_env_path = os.environ.get("GITHUB_ENV")
+        if github_env_path:
+            try:
+                with open(github_env_path, "a") as f:
+                    f.write("SYNC_STATUS=failed\n")
+            except Exception:
+                pass
+                
         sys.exit(1)
