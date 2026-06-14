@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Clock, Search, AlertCircle, CheckCircle2, Calendar, ChevronRight, PlayCircle, FileText } from 'lucide-react';
+import { Clock, Search, AlertCircle, CheckCircle2, Calendar, ChevronRight, PlayCircle, FileText, X } from 'lucide-react';
 
 export default function ProcessMetrics({ lang }) {
   const [metrics, setMetrics] = useState(null);
@@ -12,6 +12,7 @@ export default function ProcessMetrics({ lang }) {
   const [timeline, setTimeline] = useState([]);
   const [loadingTimeline, setLoadingTimeline] = useState(false);
   const dropdownRef = useRef(null);
+  const inputRef = useRef(null);
 
   const t = {
     en: {
@@ -23,11 +24,13 @@ export default function ProcessMetrics({ lang }) {
       threshold: "1,000 Signatures Reached",
       parliament: "Sent to Parliament",
       completed: "Completed / Done",
+      search_title: "Select Initiative to Inspect Timeline",
       search_placeholder: "Search all 1,000+ initiatives by title...",
       no_timeline_data: "No event timeline available for this initiative.",
       select_prompt: "Select an initiative above to inspect its historical event timeline.",
       loading: "Loading timeline...",
       stage_durations: "Stage Transition Durations",
+      border_hover: "border-hover",
       stalled_rate: "Stalled Rate",
       active_in_review: "Active in review",
       stalled_desc: "12+ months without any public event update",
@@ -51,6 +54,7 @@ export default function ProcessMetrics({ lang }) {
       threshold: "1000 allkirja koos",
       parliament: "Saadetud parlamenti",
       completed: "Lõpetatud / Tehtud",
+      search_title: "Vali algatus elutsükli ajajoone uurimiseks",
       search_placeholder: "Otsi 1000+ algatuse seast pealkirja järgi...",
       no_timeline_data: "Selle algatuse kohta puuduvad sündmuste andmed.",
       select_prompt: "Valige ülevalt algatus, et näha selle elutsükli ajajoont.",
@@ -93,16 +97,33 @@ export default function ProcessMetrics({ lang }) {
     loadProcessData();
   }, []);
 
-  // Close dropdown on click outside
+  // Close dropdown on click outside & restore current selection query if empty
   useEffect(() => {
     function handleClickOutside(event) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowDropdown(false);
+        if (selectedTitle) {
+          setSearchQuery(selectedTitle);
+        }
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [selectedTitle]);
+
+  const handleInputFocus = () => {
+    setSearchQuery('');
+    setShowDropdown(true);
+  };
+
+  const handleClearSearch = (e) => {
+    e.stopPropagation();
+    setSearchQuery('');
+    setShowDropdown(true);
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
 
   // Fetch or load timeline when ID changes
   const handleSelectInitiative = async (init) => {
@@ -220,71 +241,123 @@ export default function ProcessMetrics({ lang }) {
         )}
 
         {/* Section: Search Autocomplete */}
-        <div style={{ position: 'relative', marginBottom: '2rem' }} ref={dropdownRef}>
-          <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', padding: '0.5rem 1rem' }}>
-            <Search size={18} color="var(--text-muted)" style={{ marginRight: '0.8rem' }} />
-            <input
-              type="text"
-              placeholder={activeT.search_placeholder}
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setShowDropdown(true);
-              }}
-              onFocus={() => setShowDropdown(true)}
-              style={{
-                width: '100%',
-                background: 'none',
-                border: 'none',
-                color: '#fff',
-                fontSize: '0.95rem',
-                outline: 'none'
-              }}
-            />
-          </div>
-
-          {showDropdown && filteredInitiatives.length > 0 && (
-            <div style={{
-              position: 'absolute',
-              top: '100%',
-              left: 0,
-              right: 0,
-              background: 'rgba(15, 23, 42, 0.98)',
-              border: '1px solid rgba(59, 130, 246, 0.3)',
-              borderRadius: '8px',
-              marginTop: '4px',
-              boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.8)',
-              zIndex: 99,
-              maxHeight: '300px',
-              overflowY: 'auto'
+        <div style={{ 
+          background: 'rgba(255, 255, 255, 0.015)', 
+          border: '1px solid rgba(255, 255, 255, 0.04)', 
+          borderRadius: '12px', 
+          padding: '1.2rem', 
+          marginBottom: '2rem' 
+        }}>
+          <h3 style={{ 
+            fontSize: '0.95rem', 
+            color: '#fff', 
+            marginBottom: '0.8rem', 
+            fontWeight: 500,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <Search size={16} color="#a78bfa" /> {activeT.search_title}
+          </h3>
+          
+          <div style={{ position: 'relative' }} ref={dropdownRef}>
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              background: 'rgba(255,255,255,0.07)', 
+              borderRadius: '8px', 
+              border: '1px solid',
+              borderColor: showDropdown ? '#60a5fa' : 'rgba(255,255,255,0.1)', 
+              padding: '0.6rem 1rem',
+              transition: 'border-color 0.2s, box-shadow 0.2s',
+              boxShadow: showDropdown ? '0 0 0 2px rgba(96, 165, 250, 0.15)' : 'none'
             }}>
-              {filteredInitiatives.map(item => (
-                <div
-                  key={item.id}
-                  onClick={() => handleSelectInitiative(item)}
+              <Search size={18} color="var(--text-muted)" style={{ marginRight: '0.8rem' }} />
+              <input
+                ref={inputRef}
+                type="text"
+                placeholder={activeT.search_placeholder}
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setShowDropdown(true);
+                }}
+                onFocus={handleInputFocus}
+                style={{
+                  width: '100%',
+                  background: 'none',
+                  border: 'none',
+                  color: '#fff',
+                  fontSize: '0.95rem',
+                  outline: 'none'
+                }}
+              />
+              {searchQuery && (
+                <button 
+                  onClick={handleClearSearch}
                   style={{
-                    padding: '0.8rem 1.2rem',
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--text-muted)',
                     cursor: 'pointer',
-                    borderBottom: '1px solid rgba(255,255,255,0.05)',
-                    color: '#e2e8f0',
-                    fontSize: '0.9rem',
+                    padding: '4px',
                     display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    opacity: 0.7,
+                    transition: 'opacity 0.2s'
                   }}
-                  onMouseEnter={(e) => e.target.style.background = 'rgba(59, 130, 246, 0.15)'}
-                  onMouseLeave={(e) => e.target.style.background = 'none'}
+                  onMouseEnter={(e) => e.target.style.opacity = 1}
+                  onMouseLeave={(e) => e.target.style.opacity = 0.7}
                 >
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '80%' }}>
-                    {item.title}
-                  </span>
-                  <span style={{ fontSize: '0.7rem', padding: '0.1rem 0.4rem', borderRadius: '4px', background: 'rgba(255,255,255,0.08)', color: 'var(--text-muted)' }}>
-                    {item.phase}
-                  </span>
-                </div>
-              ))}
+                  <X size={16} />
+                </button>
+              )}
             </div>
-          )}
+
+            {showDropdown && filteredInitiatives.length > 0 && (
+              <div style={{
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                right: 0,
+                background: 'rgba(15, 23, 42, 0.98)',
+                border: '1px solid rgba(59, 130, 246, 0.3)',
+                borderRadius: '8px',
+                marginTop: '4px',
+                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.8)',
+                zIndex: 99,
+                maxHeight: '300px',
+                overflowY: 'auto'
+              }}>
+                {filteredInitiatives.map(item => (
+                  <div
+                    key={item.id}
+                    onClick={() => handleSelectInitiative(item)}
+                    style={{
+                      padding: '0.8rem 1.2rem',
+                      cursor: 'pointer',
+                      borderBottom: '1px solid rgba(255,255,255,0.05)',
+                      color: '#e2e8f0',
+                      fontSize: '0.9rem',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}
+                    onMouseEnter={(e) => e.target.style.background = 'rgba(59, 130, 246, 0.15)'}
+                    onMouseLeave={(e) => e.target.style.background = 'none'}
+                  >
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '80%' }}>
+                      {item.title}
+                    </span>
+                    <span style={{ fontSize: '0.7rem', padding: '0.1rem 0.4rem', borderRadius: '4px', background: 'rgba(255,255,255,0.08)', color: 'var(--text-muted)' }}>
+                      {item.phase}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Section: Timeline Display */}
