@@ -13,7 +13,7 @@
 
 ## 2. Current Status
 **Current Phase:** Phase 4 (AI Copilot & MCP) is PLANNED.
-**Last Update:** June 13, 2026.
+**Last Update:** July 6, 2026.
 **Overall Progress:** 
 Foundational data infrastructure and API layers are established. The local DuckDB database was successfully migrated to **MotherDuck** (`estonia_petitions`). The project is successfully linked to GitHub and deployed live on **Vercel**. End-to-end communication from the MotherDuck cloud database to the Vercel Python API, and finally to the React frontend, is fully functional. 
 
@@ -43,6 +43,7 @@ The immediate next step is building the AI Copilot & MCP layer.
 - **Deployment:** Automated CI/CD pipeline set up via GitHub to Vercel.
 - **Overview, Momentum, and Process blocks** are fully coded, linked to analytical SQL APIs, and visually styled.
 - **Bug Fix:** Resolved FastAPI crash due to missing `get_stalled_initiatives` import in `api/index.py`.
+- **Search UI/UX Enhancements in Process Metrics:** Redesigned the search autocomplete box in the Process Metrics block to be visually prominent. Implemented focus-to-reset behavior (clearing the field upon focus and restoring selection title upon clicking outside) along with an inline quick-clear `X` button to optimize query workflows.
 
 ### Phase 3: Institutional Layer (Riigikogu Integration) (Completed)
 - Built the API client wrapper `RiigikoguClient` (`etl/clients/riigikogu.py`) to interface with the Riigikogu Open Data API.
@@ -107,6 +108,11 @@ The immediate next step is building the AI Copilot & MCP layer.
 - **Riigikogu API Timeouts (`ConnectTimeoutError` during Sync)**
   - **Context:** The daily automated sync failed due to `api.riigikogu.ee` connection timeouts, which broke the entire daily run and sent a red alert, even though Rahvaalgatus data had synced correctly.
   - **Resolution:** Wrapped the Riigikogu sync routine in a try-except block to gracefully continue when the parliament server is unreachable. Added status signaling via `GITHUB_ENV` to communicate a "partial success" state, splitting the Telegram workflow notifications into green (all succeeded) and yellow (partial sync, parliament API timeout) states.
+
+- **Rahvaalgatus API IncompleteRead (Connection broken mid-stream)**
+  - **Context:** The daily sync script consistently failed for several days (July 3 - July 5) during the `sync_initiatives()` step with `requests.exceptions.ChunkedEncodingError: ('Connection broken: IncompleteRead(81283 bytes read, 186313 more expected)'...)` (or similar byte counts).
+  - **Analysis:** Direct testing with varying limit sizes (e.g. `limit=10` or `limit=500` events) succeeded, while any requests exceeding ~80KB failed on both local developer machines and GitHub Action runners. This indicated an upstream server-side issue, likely an Nginx proxy buffer configuration fault on `rahvaalgatus.ee` (such as a full server disk space preventing Nginx from writing the buffered payload remainder to disk, forcing it to abruptly terminate the connection).
+  - **Resolution:** No code modification is required in our repository as the issue is purely upstream. Once the Estonian Cooperation Assembly (Eesti Koostöö Kogu) system administrators resolved the disk space or buffer capacity issues, the daily ETL script automatically resumed operation and successfully synchronized all missing data.
 
 > ⚠️ **CRITICAL DEVELOPMENT WORKFLOW NOTE:** Because the GitHub Action (`daily_sync.yml`) now automatically commits static JSON updates directly to the `main` branch every morning, **you must run `git pull --rebase` before beginning any new coding session.** Failure to do so will result in push rejections and merge conflicts on the `/public/api_data/` files. Never push without fetching the latest remote state first!
 
